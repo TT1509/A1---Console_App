@@ -1,6 +1,6 @@
 package Customer;
-
-import Customer.Customer;
+import InsuranceCard.InsuranceCard;
+import Claim.Claim;
 
 import java.util.ArrayList;
 import java.util.List;

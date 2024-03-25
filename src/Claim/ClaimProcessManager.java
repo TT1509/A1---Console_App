@@ -1,10 +1,12 @@
 package Claim;
 
+import java.util.List;
+
 public interface ClaimProcessManager {
 
-    boolean addClaim(Claim claim);
+    void addClaim(Claim claim);
     void updateClaim(Claim claim);
-    void removeClaim(Claim claim);
-    void getOne(Claim claim);
-    void getAll(Claim claim);
+    void deleteClaim(String claimID);
+    Claim getOneClaim(String claimID);
+    List<Claim> getAllClaims();
 }

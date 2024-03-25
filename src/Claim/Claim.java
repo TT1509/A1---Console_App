@@ -2,10 +2,13 @@ package Claim;
 
 import Customer.Customer;
 import InsuranceCard.InsuranceCard;
+
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 public class Claim implements ClaimProcessManager {
+
     private String claimID;
     private Date claimDate;
     private Customer insuredPerson;
@@ -17,6 +20,18 @@ public class Claim implements ClaimProcessManager {
     private String receiverBankInfo;
 
     // Constructor
+    public Claim() {
+        this.claimID = "";
+        this.claimDate = new Date();
+        this.insuredPerson = null;
+        this.cardNumber = null;
+        this.examDate = new Date();
+        this.documents = new ArrayList<>();
+        this.claimAmount = 0.0;
+        this.status = "";
+        this.receiverBankInfo = "";
+    }
+
     public Claim(String claimID, Date claimDate,
                  Customer insuredPerson, InsuranceCard cardNumber,
                  Date examDate, List<Claim> documents, double claimAmount,
@@ -97,41 +112,65 @@ public class Claim implements ClaimProcessManager {
         this.receiverBankInfo = receiverBankInfo;
     }
 
-
     @Override
-    public boolean addClaim(Claim claim) {
-        if (documents.contains(claim.claimID)){
-            return false;
-        }
+    public void addClaim(Claim claim) {
         documents.add(claim);
-        return true;
     }
 
     @Override
-    public void removeClaim(Claim claim) {
-            documents.remove(claim);
-    }
-
-    @Override
-    public void updateClaim(Claim claim) {
-        if (documents.contains(claim.claimID)){
-            removeClaim(claim);
-            addClaim(claim);
+    public void updateClaim(Claim updatedClaim) {
+        for (int i = 0; i < documents.size(); i++) {
+            Claim claim = documents.get(i);
+            if (claim.getClaimID().equals(updatedClaim.getClaimID())) {
+                documents.set(i, updatedClaim);
+                return;
+            }
         }
+        // If the claim with the given ID is not found
+        throw new IllegalArgumentException("Claim not found: " + updatedClaim.getClaimID());
     }
 
     @Override
-    public void getOne(Claim claim) {
-        this.get(claim);
+    public void deleteClaim(String claimID) {
+        for (int i = 0; i < documents.size(); i++) {
+            Claim claim = documents.get(i);
+            if (claim.getClaimID().equals(claimID)) {
+                documents.remove(i);
+                return;
+            }
+        }
+        // If the claim with the given ID is not found
+        throw new IllegalArgumentException("Claim not found: " + claimID);
     }
+
     @Override
-    public void getAll(Claim claim) {
-
+    public Claim getOneClaim(String claimID) {
+        for (Claim claim : documents) {
+            if (claim.getClaimID().equals(claimID)) {
+                return claim;
+            }
+        }
+        return null; // Claim not found
     }
 
+    @Override
+    public List<Claim> getAllClaims() {
+        return documents;
+    }
 
-
-
-
+    @Override
+    public String toString() {
+        return "Claim{" +
+                "claimID='" + claimID + '\'' +
+                ", claimDate=" + claimDate +
+                ", insuredPerson=" + insuredPerson +
+                ", cardNumber=" + cardNumber +
+                ", examDate=" + examDate +
+                ", documents=" + documents +
+                ", claimAmount=" + claimAmount +
+                ", status='" + status + '\'' +
+                ", receiverBankInfo='" + receiverBankInfo + '\'' +
+                '}';
+    }
 
 }

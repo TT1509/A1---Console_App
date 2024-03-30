@@ -60,15 +60,6 @@ public class Customer implements CustomerManager{
         return claims;
     }
 
-    // Method to write customer data to file
-    private void writeToFile() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("customer.txt", true))) {
-            writer.write("ID: " + id + ", Full Name: " + fullName + ", Insurance Card: " + insuranceCard.getCardNumber() + "\n");
-        } catch (IOException e) {
-            System.err.println("Error writing to file: " + e.getMessage());
-        }
-    }
-
     @Override
     public String toString() {
         return "Customer{" +
@@ -85,11 +76,21 @@ public class Customer implements CustomerManager{
     public void addCustomer() {
         Scanner scanner = new Scanner(System.in);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILENAME, true))) {
+            List<Customer> customers = getAllCustomers(); // Load existing customers
+
             // Prompt the user to input customer details
             System.out.println("Enter customer ID:");
             String id = scanner.nextLine();
+
+            // Check if the entered ID already exists
+            if (customers.stream().anyMatch(c -> c.getId().equals(id))) {
+                System.out.println("Customer with ID " + id + " already exists. Please choose a different ID.");
+                return; // Exit the method without adding the customer
+            }
+
             System.out.println("Enter customer full name:");
             String fullName = scanner.nextLine();
+
             // Create a new Customer object with the provided details
             Customer newCustomer = new Customer(id, fullName);
             // Write the new customer data to the file
@@ -103,6 +104,7 @@ public class Customer implements CustomerManager{
         }
     }
 
+
     @Override
     public void updateCustomer() {
         Scanner scanner = new Scanner(System.in);
@@ -112,17 +114,23 @@ public class Customer implements CustomerManager{
             System.out.println("Enter customer ID:");
             String id = scanner.nextLine();
 
-            // Find the existing customer to update
-            Optional<Customer> existingCustomer = customers.stream()
-                    .filter(c -> c.getId().equals(id))
-                    .findFirst();
-            if (existingCustomer.isPresent()) {
-                Customer customerToUpdate = existingCustomer.get();
+            // Find the index of the existing customer in the list
+            int index = -1;
+            for (int i = 0; i < customers.size(); i++) {
+                if (customers.get(i).getId().equals(id)) {
+                    index = i;
+                    break;
+                }
+            }
+
+            if (index != -1) {
                 // Prompt the user to input the updated full name
                 System.out.println("Enter new full name for customer with ID " + id + ":");
                 String fullName = scanner.nextLine();
-                // Update the full name of the existing customer
-                customerToUpdate.setFullName(fullName);
+
+                // Update the full name of the existing customer in the list
+                customers.get(index).setFullName(fullName);
+                // Save the updated list of customers back to the file
                 saveCustomersToFile(customers);
                 System.out.println("Customer's full name updated successfully.");
             } else {
@@ -134,6 +142,7 @@ public class Customer implements CustomerManager{
             scanner.close();
         }
     }
+
 
     @Override
     public void deleteCustomer() {
@@ -186,7 +195,9 @@ public class Customer implements CustomerManager{
                     .filter(c -> c.getId().equals(id))
                     .findFirst();
             if (existingCustomer.isPresent()) {
-                return existingCustomer.get(); // Return the found customer
+                // Return the found customer
+                System.out.println(existingCustomer);
+                return existingCustomer.get();
             } else {
                 System.out.println("Customer with ID " + id + " not found.");
                 return null;
@@ -207,6 +218,7 @@ public class Customer implements CustomerManager{
                 Customer customer = stringToCustomer(line);
                 if (customer != null) {
                     customers.add(customer);
+                    System.out.println(customers);
                 }
             }
         } catch (IOException e) {
@@ -218,17 +230,32 @@ public class Customer implements CustomerManager{
     private String customerToString(Customer customer) {
         // Convert Customer object to a string representation for writing to file
         // Format: id;fullName;insuranceCard;claims
-        return String.join(";", customer.getId(), customer.getFullName(), insuranceCardToString(customer.getInsuranceCard()), claimsToString(customer.getClaims()));
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(customer.getId()).append(";");
+        stringBuilder.append(customer.getFullName()).append(";");
+        if (customer.getInsuranceCard() != null) {
+            stringBuilder.append(insuranceCardToString(customer.getInsuranceCard()));
+        }
+        if (customer.getClaims() != null) {
+            stringBuilder.append(claimsToString(customer.getClaims()));
+        }
+        return stringBuilder.toString();
     }
 
     private Customer stringToCustomer(String line) {
         // Convert string from file to Customer object
         String[] parts = line.split(";");
-        if (parts.length >= 3) {
+        if (parts.length >= 2) {
             String id = parts[0];
             String fullName = parts[1];
-            InsuranceCard insuranceCard = stringToInsuranceCard(parts[2]);
-            List<Claim> claims = stringToClaims(parts[3]);
+            InsuranceCard insuranceCard = null;
+            if (parts.length >= 3 && !parts[2].isEmpty()) {
+                insuranceCard = stringToInsuranceCard(parts[2]);
+            }
+            List<Claim> claims = null;
+            if (parts.length >= 4 && !parts[3].isEmpty()) {
+                claims = stringToClaims(parts[3]);
+            }
             return new Customer(id, fullName, insuranceCard, claims);
         }
         return null;

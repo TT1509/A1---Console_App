@@ -13,9 +13,9 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        Customer customerManager = new Customer(); // Instantiate the Customer class
+        Customer customer= new Customer(); // Instantiate the Customer class
         // Call the addCustomer() method to add the customer
-        customerManager.deleteCustomer();
+        customer.addCustomer();
         // Close the scanner
         scanner.close();
     }

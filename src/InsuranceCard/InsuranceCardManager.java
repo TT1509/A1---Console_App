@@ -1,8 +1,16 @@
 package InsuranceCard;
 import Customer.Customer;
 
+import java.util.List;
+
 public interface InsuranceCardManager {
-    InsuranceCard createInsuranceCard(Customer customer);
+
+    void addInsuranceCard();
+
+    void updateInsuranceCard();
+    void deleteInsuranceCard();
+    InsuranceCard getInsuranceCardById();
+    List<InsuranceCard> getAllInsuranceCards();
 }
 
 

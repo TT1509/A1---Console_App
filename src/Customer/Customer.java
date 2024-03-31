@@ -265,7 +265,7 @@ public class Customer implements CustomerManager{
         // Convert InsuranceCard object to a string representation
         // Format: cardNumber;cardHolderName;policyOwnerName;expirationDate
         if (insuranceCard != null) {
-            return String.join(";", insuranceCard.getCardNumber(), insuranceCard.getCardHolder().getFullName(), insuranceCard.getPolicyOwner(), insuranceCard.getExpirationDate().toString());
+            return String.join(";", insuranceCard.getCardNumber(), insuranceCard.getCardHolder(), insuranceCard.getPolicyOwner(), insuranceCard.getExpirationDate().toString());
         }
         return "";
     }
@@ -275,10 +275,9 @@ public class Customer implements CustomerManager{
         String[] parts = line.split(";");
         if (parts.length >= 4) {
             String cardNumber = parts[0];
-            String cardHolderName = parts[1];
+            String cardHolder = parts[1];
             String policyOwnerName = parts[2];
             Date expirationDate = parseDate(parts[3]);
-            Customer cardHolder = new Customer(null, cardHolderName, null, null);
             return new InsuranceCard(cardNumber, cardHolder, policyOwnerName, expirationDate);
         }
         return null;

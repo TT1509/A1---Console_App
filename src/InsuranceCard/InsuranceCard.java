@@ -5,10 +5,7 @@ import Customer.Customer;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 
 public class InsuranceCard implements InsuranceCardManager{
 
@@ -141,6 +138,12 @@ public class InsuranceCard implements InsuranceCardManager{
         Scanner scanner = new Scanner(System.in);
         try {
             List<InsuranceCard> insuranceCards = getAllInsuranceCards();
+
+            if (insuranceCards == null) {
+                System.out.println("Error: Unable to retrieve insurance card data.");
+                return;
+            }
+
             // Prompt the user to input the card number
             System.out.println("Enter card number:");
             String cardNumber = scanner.nextLine();
@@ -180,6 +183,7 @@ public class InsuranceCard implements InsuranceCardManager{
             scanner.close();
         }
     }
+
 
     @Override
     public void deleteInsuranceCard() {
@@ -222,7 +226,9 @@ public class InsuranceCard implements InsuranceCardManager{
                     .findFirst();
             if (existingInsuranceCard.isPresent()) {
                 // Return the found insurance card
+                System.out.println(existingInsuranceCard);
                 return existingInsuranceCard.get();
+
             } else {
                 System.out.println("Insurance card with the specified number not found.");
                 return null;
@@ -234,7 +240,20 @@ public class InsuranceCard implements InsuranceCardManager{
 
     @Override
     public List<InsuranceCard> getAllInsuranceCards() {
-        return null;
+        List<InsuranceCard> insuranceCards = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILENAME))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                InsuranceCard insuranceCard = stringToInsuranceCard(line);
+                if (insuranceCard != null) {
+                    insuranceCards.add(insuranceCard);
+                    System.out.println(insuranceCards);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading insurance cards: " + e.getMessage());
+        }
+        return insuranceCards;
     }
 
 
@@ -260,6 +279,34 @@ public class InsuranceCard implements InsuranceCardManager{
         return null;
     }
 
+    // Method to match insurance card ID with customer ID and card holder name with customer name
+    public void matchAndWriteInsuranceCardIdToCustomer(String insuranceCardId) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("insuranceCard.txt"));
+             BufferedWriter writer = new BufferedWriter(new FileWriter("Customer.txt", true))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(";");
+                if (parts.length >= 4) {
+                    String cardNumber = parts[0];
+                    String customerID = parts[1];
+                    String cardHolderName = parts[2];
+                    String policyOwner = parts[3];
+
+                    // Match insurance card ID with customer ID and card holder name with customer name
+                    if (cardNumber.equals(insuranceCardId) && getCardHolder().equals(cardHolderName)) {
+                        // Write insurance card ID to Customer.txt
+                        writer.write(customerID);
+                        writer.newLine();
+                        System.out.println("Insurance card ID " + insuranceCardId + " matched with customer ID " + customerID + ". Written to Customer.txt");
+                        return; // Exit loop once a match is found
+                    }
+                }
+            }
+            System.out.println("No matching insurance card found for ID " + insuranceCardId);
+        } catch (IOException e) {
+            System.err.println("Error reading or writing files: " + e.getMessage());
+        }
+    }
 
 
     // Helper method to parse date from string

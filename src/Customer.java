@@ -1,14 +1,10 @@
-package Customer;
-import Claim.Claim;
-import InsuranceCard.InsuranceCard;
-
 import java.io.*;
 import java.util.*;
 
 /**
  * @author Tran Luu Quang Tung - s3978481
  */
-public class Customer implements CustomerManager{
+public class Customer{
 
     private String id;
     private String fullName;
@@ -17,12 +13,6 @@ public class Customer implements CustomerManager{
 
     //Constructors
     public Customer() {
-    }
-    public Customer(String id, String fullName) {
-        this.id = id;
-        this.fullName = fullName;
-        this.insuranceCard = null;
-        this.claims = new ArrayList<>();
     }
 
     public Customer(String id, String fullName, InsuranceCard insuranceCard, List<Claim> claims) {
@@ -70,12 +60,11 @@ public class Customer implements CustomerManager{
                 '}';
     }
 
-    private static final String FILENAME = "Customer.txt";
+    static final String CUSTOMER_FILE = "Customer.txt";
 
-    @Override
-    public void addCustomer() {
+    static void addCustomer() {
         Scanner scanner = new Scanner(System.in);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILENAME, true))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(CUSTOMER_FILE, true))) {
             List<Customer> customers = getAllCustomers(); // Load existing customers
 
             // Prompt the user to input customer details
@@ -92,7 +81,7 @@ public class Customer implements CustomerManager{
             String fullName = scanner.nextLine();
 
             // Create a new Customer object with the provided details
-            Customer newCustomer = new Customer(id, fullName);
+            Customer newCustomer = new Customer(id, fullName, null, null);
             // Write the new customer data to the file
             writer.write(customerToString(newCustomer));
             writer.newLine();
@@ -105,8 +94,7 @@ public class Customer implements CustomerManager{
     }
 
 
-    @Override
-    public void updateCustomer() {
+    static void updateCustomer() {
         Scanner scanner = new Scanner(System.in);
         try {
             List<Customer> customers = getAllCustomers();
@@ -144,8 +132,7 @@ public class Customer implements CustomerManager{
     }
 
 
-    @Override
-    public void deleteCustomer() {
+    static void deleteCustomer() {
         Scanner scanner = new Scanner(System.in);
         try {
             List<Customer> customers = getAllCustomers();
@@ -182,8 +169,7 @@ public class Customer implements CustomerManager{
     }
 
 
-    @Override
-    public Customer getCustomerById() {
+    static Customer getCustomerById() {
         Scanner scanner = new Scanner(System.in);
         try {
             List<Customer> customers = getAllCustomers();
@@ -209,10 +195,9 @@ public class Customer implements CustomerManager{
 
 
 
-    @Override
-    public List<Customer> getAllCustomers() {
+    static List<Customer> getAllCustomers() {
         List<Customer> customers = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(FILENAME))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(CUSTOMER_FILE))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 Customer customer = stringToCustomer(line);
@@ -227,14 +212,18 @@ public class Customer implements CustomerManager{
         return customers;
     }
 
-    private String customerToString(Customer customer) {
+    static String customerToString(Customer customer) {
         // Convert Customer object to a string representation for writing to file
         // Format: id;fullName;insuranceCard;claims
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(customer.getId()).append(";");
         stringBuilder.append(customer.getFullName()).append(";");
         if (customer.getInsuranceCard() != null) {
-            stringBuilder.append(insuranceCardToString(customer.getInsuranceCard()));
+            // Append insurance card details, including ID
+            stringBuilder.append(customer.getInsuranceCard().getCardNumber()).append(";");
+        } else {
+            // Append empty field if no insurance card
+            stringBuilder.append(";");
         }
         if (customer.getClaims() != null) {
             stringBuilder.append(claimsToString(customer.getClaims()));
@@ -242,7 +231,7 @@ public class Customer implements CustomerManager{
         return stringBuilder.toString();
     }
 
-    private Customer stringToCustomer(String line) {
+    public static Customer stringToCustomer(String line) {
         // Convert string from file to Customer object
         String[] parts = line.split(";");
         if (parts.length >= 2) {
@@ -261,29 +250,33 @@ public class Customer implements CustomerManager{
         return null;
     }
 
-    private String insuranceCardToString(InsuranceCard insuranceCard) {
+    private static String insuranceCardToString(InsuranceCard insuranceCard) {
         // Convert InsuranceCard object to a string representation
         // Format: cardNumber;cardHolderName;policyOwnerName;expirationDate
         if (insuranceCard != null) {
-            return String.join(";", insuranceCard.getCardNumber(), insuranceCard.getCardHolder(), insuranceCard.getPolicyOwner(), insuranceCard.getExpirationDate().toString());
+            Customer cardHolder = insuranceCard.getCardHolder();
+            String cardHolderName = (cardHolder != null) ? cardHolder.getFullName() : "";
+            return String.join(";", insuranceCard.getCardNumber(), cardHolderName, insuranceCard.getPolicyOwner(), insuranceCard.getExpirationDate().toString());
         }
         return "";
     }
 
-    private InsuranceCard stringToInsuranceCard(String line) {
+    private static InsuranceCard stringToInsuranceCard(String line) {
         // Convert string from file to InsuranceCard object
         String[] parts = line.split(";");
-        if (parts.length >= 4) {
+        if (parts.length >= 3) {
             String cardNumber = parts[0];
-            String cardHolder = parts[1];
+            String cardHolderName = parts[1]; // Assuming parts[1] contains the card holder's name
             String policyOwnerName = parts[2];
-            Date expirationDate = parseDate(parts[3]);
+            Date expirationDate = parseDate(parts[3]); // Assuming parts[3] contains the expiration date
+            // Create a dummy Customer with the card holder's name
+            Customer cardHolder = new Customer("", cardHolderName, null, null);
             return new InsuranceCard(cardNumber, cardHolder, policyOwnerName, expirationDate);
         }
         return null;
     }
 
-    private String claimsToString(List<Claim> claims) {
+    private static String claimsToString(List<Claim> claims) {
         // Convert List<Claim> to a string representation
         // Format: claim1,claim2,claim3...
         if (claims != null && !claims.isEmpty()) {
@@ -296,7 +289,7 @@ public class Customer implements CustomerManager{
         return "";
     }
 
-    private List<Claim> stringToClaims(String line) {
+    private static List<Claim> stringToClaims(String line) {
         // Convert string from file to List<Claim>
         List<Claim> claims = new ArrayList<>();
         String[] claimStrings = line.split(",");
@@ -309,13 +302,13 @@ public class Customer implements CustomerManager{
         return claims;
     }
 
-    private String claimToString(Claim claim) {
+    private static String claimToString(Claim claim) {
         // Convert Claim object to a string representation
         // Format: id;claimDate;insuredPersonId;cardNumber;examDate;documents;claimAmount;status;receiverBankInfo
         return String.join(";", claim.getClaimID(), claim.getClaimDate().toString(), claim.getInsuredPerson().getId(), claim.getCardNumber().getCardNumber(), claim.getExamDate().toString(),String.valueOf(claim.getClaimAmount()), claim.getStatus(), claim.getReceiverBankInfo());
     }
 
-    private Claim stringToClaim(String line) {
+    private static Claim stringToClaim(String line) {
         // Convert string from file to Claim object
         String[] parts = line.split(";");
         if (parts.length >= 9) {
@@ -335,14 +328,16 @@ public class Customer implements CustomerManager{
         return null;
     }
 
-    private Date parseDate(String dateString) {
+
+
+    private static Date parseDate(String dateString) {
         // Parse string to Date
         // You can implement your date parsing logic here
         return new Date(); // Placeholder implementation, replace with actual parsing
     }
 
-    private void saveCustomersToFile(List<Customer> customers) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILENAME))) {
+    static void saveCustomersToFile(List<Customer> customers) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(CUSTOMER_FILE))) {
             for (Customer customer : customers) {
                 writer.write(customerToString(customer));
                 writer.newLine();

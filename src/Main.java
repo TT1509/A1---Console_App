@@ -1,10 +1,3 @@
-import InsuranceCard.InsuranceCard;
-import Claim.Claim;
-import Customer.Customer;
-import Customer.CustomerManager;
-import java.util.Date;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -16,7 +9,7 @@ public class Main {
         Customer customer= new Customer(); // Instantiate the Customer class
 //        customer.addCustomer();
         InsuranceCard insuranceCard = new InsuranceCard();
-        insuranceCard.getAllInsuranceCards();
+        insuranceCard.addInsuranceCard();
 
 
         // Close the scanner

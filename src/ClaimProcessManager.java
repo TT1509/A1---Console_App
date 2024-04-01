@@ -1,5 +1,3 @@
-package Claim;
-
 import java.util.List;
 
 public interface ClaimProcessManager {

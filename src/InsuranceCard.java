@@ -1,17 +1,12 @@
-package InsuranceCard;
-
-
-import Customer.Customer;
-
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class InsuranceCard implements InsuranceCardManager{
+public class InsuranceCard {
 
     //Attributes
     private String cardNumber;
-    private String cardHolder;
+    private Customer cardHolder;
     private String policyOwner;
     private Date expirationDate;
 
@@ -21,7 +16,7 @@ public class InsuranceCard implements InsuranceCardManager{
 
     }
 
-    public InsuranceCard(String cardNumber, String cardHolder, String policyOwner, Date expirationDate) {
+    public InsuranceCard(String cardNumber, Customer cardHolder, String policyOwner, Date expirationDate) {
 //        // Check if the provided cardHolder exists
 //        if (cardHolder == null) {
 //            throw new IllegalArgumentException("Card holder cannot be null.");
@@ -62,11 +57,11 @@ public class InsuranceCard implements InsuranceCardManager{
         this.cardNumber = cardNumber;
     }
 
-    public String getCardHolder() {
+    public Customer getCardHolder() {
         return cardHolder;
     }
 
-    public void setCardHolder(String cardHolder) {
+    public void setCardHolder(Customer cardHolder) {
         this.cardHolder = cardHolder;
     }
 
@@ -96,36 +91,62 @@ public class InsuranceCard implements InsuranceCardManager{
                 '}';
     }
 
-    private static final String FILENAME = "insuranceCard.txt";
+    private static final String INSURANCE_FILE = "insuranceCard.txt";
 
-    @Override
     public void addInsuranceCard() {
         Scanner scanner = new Scanner(System.in);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILENAME, true))) {
-            // Prompt the user to input insurance card details
-            System.out.println("Enter card number:");
-            String cardNumber = scanner.nextLine();
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(INSURANCE_FILE, true));
+             BufferedWriter customerWriter = new BufferedWriter(new FileWriter(Customer.CUSTOMER_FILE, true))) {
+            // Get all existing customers
+            List<Customer> customers = Customer.getAllCustomers();
 
-            // Prompt the user to card holder name
-            System.out.println("Enter card holder name:");
-            String cardHolder = scanner.nextLine();
+            // Display all customers
+            System.out.println("List of existing customers:");
+            for (Customer customer : customers) {
+                System.out.println("ID: " + customer.getId() + ", Name: " + customer.getFullName());
+            }
 
-            // Prompt the admin to input policy owner's name
-            System.out.println("Enter policy owner's name:");
-            String policyOwner = scanner.nextLine();
+            // Prompt the user to input the ID of an existing customer
+            System.out.print("Enter the ID of an existing customer to use as cardholder: ");
+            String customerId = scanner.nextLine();
 
-            // Prompt the admin to input expiration date
-            System.out.println("Enter expiration date (format: dd/MM/yyyy):");
-            String expirationDateString = scanner.nextLine();
-            Date expirationDate = parseDate(expirationDateString);
+            // Find the customer by ID
+            Customer selectedCustomer = null;
+            for (Customer customer : customers) {
+                if (customer.getId().equals(customerId)) {
+                    selectedCustomer = customer;
+                    break;
+                }
+            }
 
-            // Create the InsuranceCard object using the input
-            InsuranceCard insuranceCard = new InsuranceCard(cardNumber, cardHolder, policyOwner, expirationDate);
+            if (selectedCustomer != null) {
+                // Prompt the user to input insurance card details
+                System.out.println("Enter card number:");
+                String cardNumber = scanner.nextLine();
 
-            // Write the insurance card data to the file
-            writer.write(insuranceCardToString(insuranceCard));
-            writer.newLine();
-            System.out.println("Insurance card added successfully.");
+                // Prompt the admin to input policy owner's name
+                System.out.println("Enter policy owner's name:");
+                String policyOwner = scanner.nextLine();
+
+                // Prompt the admin to input expiration date
+                System.out.println("Enter expiration date (format: dd/MM/yyyy):");
+                String expirationDateString = scanner.nextLine();
+                Date expirationDate = parseDate(expirationDateString);
+
+                // Create the InsuranceCard object using the input
+                InsuranceCard insuranceCard = new InsuranceCard(cardNumber, selectedCustomer, policyOwner, expirationDate);
+
+                // Write the insurance card data to the file
+                writer.write(insuranceCardToString(insuranceCard));
+                writer.newLine();
+                System.out.println("Insurance card added successfully.");
+
+                // Update the corresponding customer entry with insurance card ID
+                updateCustomerWithInsuranceCard(insuranceCard, selectedCustomer);
+
+            } else {
+                System.out.println("No customer found with the specified ID.");
+            }
         } catch (IOException e) {
             System.err.println("Error adding insurance card: " + e.getMessage());
         } finally {
@@ -133,7 +154,32 @@ public class InsuranceCard implements InsuranceCardManager{
         }
     }
 
-    @Override
+    private void updateCustomerWithInsuranceCard(InsuranceCard insuranceCard, Customer customer) {
+        // Update the selected customer's insurance card
+        customer.setInsuranceCard(insuranceCard);
+        // Get all existing customers
+        List<Customer> allCustomers = Customer.getAllCustomers();
+        try (BufferedWriter customerWriter = new BufferedWriter(new FileWriter(Customer.CUSTOMER_FILE))) {
+            for (Customer existingCustomer : allCustomers) {
+                if (existingCustomer.getId().equals(customer.getId())) {
+                    // Update the existing customer in the list
+                    existingCustomer.setInsuranceCard(insuranceCard);
+                }
+                // Write the customer (whether updated or not) to the file
+                customerWriter.write(Customer.customerToString(existingCustomer));
+                customerWriter.newLine();
+            }
+            System.out.println("Customer data updated with insurance card ID.");
+        } catch (IOException e) {
+            System.err.println("Error updating customer data: " + e.getMessage());
+        }
+    }
+
+
+
+
+
+
     public void updateInsuranceCard() {
         Scanner scanner = new Scanner(System.in);
         try {
@@ -177,15 +223,12 @@ public class InsuranceCard implements InsuranceCardManager{
             } else {
                 System.out.println("Insurance card with the specified number not found.");
             }
-        } catch (IOException e) {
-            System.err.println("Error updating insurance card: " + e.getMessage());
         } finally {
             scanner.close();
         }
     }
 
 
-    @Override
     public void deleteInsuranceCard() {
         Scanner scanner = new Scanner(System.in);
         try {
@@ -205,14 +248,12 @@ public class InsuranceCard implements InsuranceCardManager{
             } else {
                 System.out.println("Insurance card with the specified number not found.");
             }
-        } catch (IOException e) {
-            System.err.println("Error deleting insurance card: " + e.getMessage());
         } finally {
             scanner.close();
         }
     }
 
-    @Override
+
     public InsuranceCard getInsuranceCardById() {
         Scanner scanner = new Scanner(System.in);
         try {
@@ -238,10 +279,10 @@ public class InsuranceCard implements InsuranceCardManager{
         }
     }
 
-    @Override
+
     public List<InsuranceCard> getAllInsuranceCards() {
         List<InsuranceCard> insuranceCards = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(FILENAME))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(INSURANCE_FILE))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 InsuranceCard insuranceCard = stringToInsuranceCard(line);
@@ -257,60 +298,42 @@ public class InsuranceCard implements InsuranceCardManager{
     }
 
 
-    private String insuranceCardToString(InsuranceCard insuranceCard) {
+    private static String insuranceCardToString(InsuranceCard insuranceCard) {
         // Convert InsuranceCard object to a string representation
         // Format: cardNumber;cardHolderName;policyOwnerName;expirationDate
         if (insuranceCard != null) {
-            return String.join(";", insuranceCard.getCardNumber(), insuranceCard.getCardHolder(), insuranceCard.getPolicyOwner(), insuranceCard.getExpirationDate().toString());
+            Customer cardHolder = insuranceCard.getCardHolder();
+            String cardHolderName = (cardHolder != null) ? cardHolder.getFullName() : "";
+            return String.join(";", insuranceCard.getCardNumber(), cardHolderName, insuranceCard.getPolicyOwner(), insuranceCard.getExpirationDate().toString());
         }
         return "";
     }
 
-    private InsuranceCard stringToInsuranceCard(String line) {
+    private static InsuranceCard stringToInsuranceCard(String line) {
         // Convert string from file to InsuranceCard object
         String[] parts = line.split(";");
         if (parts.length >= 4) {
             String cardNumber = parts[0];
-            String cardHolder = parts[1];
+            String customerId = parts[1]; // Assuming parts[1] contains the customer ID
             String policyOwnerName = parts[2];
             Date expirationDate = parseDate(parts[3]);
-            return new InsuranceCard(cardNumber, cardHolder, policyOwnerName, expirationDate);
+            // Retrieve the customer by ID
+            Customer customer = new Customer(); // Instantiate an object that implements CustomerManager
+            Customer cardHolder = Customer.getCustomerById(); // Call the getCustomerById method
+
+            // Check if the customer exists
+            if (cardHolder != null) {
+                return new InsuranceCard(cardNumber, cardHolder, policyOwnerName, expirationDate);
+            } else {
+                System.err.println("Customer with ID " + customerId + " not found.");
+            }
         }
         return null;
     }
 
-    // Method to match insurance card ID with customer ID and card holder name with customer name
-    public void matchAndWriteInsuranceCardIdToCustomer(String insuranceCardId) {
-        try (BufferedReader reader = new BufferedReader(new FileReader("insuranceCard.txt"));
-             BufferedWriter writer = new BufferedWriter(new FileWriter("Customer.txt", true))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(";");
-                if (parts.length >= 4) {
-                    String cardNumber = parts[0];
-                    String customerID = parts[1];
-                    String cardHolderName = parts[2];
-                    String policyOwner = parts[3];
-
-                    // Match insurance card ID with customer ID and card holder name with customer name
-                    if (cardNumber.equals(insuranceCardId) && getCardHolder().equals(cardHolderName)) {
-                        // Write insurance card ID to Customer.txt
-                        writer.write(customerID);
-                        writer.newLine();
-                        System.out.println("Insurance card ID " + insuranceCardId + " matched with customer ID " + customerID + ". Written to Customer.txt");
-                        return; // Exit loop once a match is found
-                    }
-                }
-            }
-            System.out.println("No matching insurance card found for ID " + insuranceCardId);
-        } catch (IOException e) {
-            System.err.println("Error reading or writing files: " + e.getMessage());
-        }
-    }
-
 
     // Helper method to parse date from string
-    private Date parseDate(String dateString) {
+    private static Date parseDate(String dateString) {
         SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
         try {
             return format.parse(dateString);
@@ -320,10 +343,11 @@ public class InsuranceCard implements InsuranceCardManager{
         }
     }
 
+
     // Method to write insurance card data to a .txt file
     // Method to write insurance card data to the Customer.txt file and update existing customer
-    private void saveInsuranceCardsToFile(List<InsuranceCard> insuranceCards) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILENAME))) {
+    private void saveInsuranceCardsToFile(List<InsuranceCard> insuranceCards) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(INSURANCE_FILE, true))) {
             for (InsuranceCard insuranceCard : insuranceCards) {
                 writer.write(insuranceCardToString(insuranceCard));
                 writer.newLine();

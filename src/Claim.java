@@ -1,8 +1,3 @@
-package Claim;
-
-import Customer.Customer;
-import InsuranceCard.InsuranceCard;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

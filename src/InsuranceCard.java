@@ -144,7 +144,7 @@ public class InsuranceCard {
 
 
 
-    private void updateCustomerWithInsuranceCard(InsuranceCard insuranceCard, Customer customer) {
+    private void updateCustomerWithInsuranceCard(InsuranceCard insuranceCard, Customer customer) throws IOException {
         // Update the selected customer's insurance card
         customer.setInsuranceCard(insuranceCard);
         // Get all existing customers
@@ -219,7 +219,7 @@ public class InsuranceCard {
     }
 
 
-    public void deleteInsuranceCard() {
+    public static void deleteInsuranceCard() {
         Scanner scanner = new Scanner(System.in);
         try {
             List<InsuranceCard> insuranceCards = getAllInsuranceCards();
@@ -244,7 +244,7 @@ public class InsuranceCard {
     }
 
 
-    public InsuranceCard getInsuranceCardById() {
+    public static InsuranceCard getInsuranceCardById() {
         Scanner scanner = new Scanner(System.in);
         try {
             List<InsuranceCard> insuranceCards = getAllInsuranceCards();
@@ -299,7 +299,7 @@ public class InsuranceCard {
         return "";
     }
 
-    private static InsuranceCard stringToInsuranceCard(String line) {
+    static InsuranceCard stringToInsuranceCard(String line) {
         // Convert string from file to InsuranceCard object
         String[] parts = line.split(";");
         if (parts.length >= 4) {
@@ -336,7 +336,7 @@ public class InsuranceCard {
 
     // Method to write insurance card data to a .txt file
     // Method to write insurance card data to the Customer.txt file and update existing customer
-    private void saveInsuranceCardsToFile(List<InsuranceCard> insuranceCards) {
+    static void saveInsuranceCardsToFile(List<InsuranceCard> insuranceCards) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(INSURANCE_FILE, true))) {
             for (InsuranceCard insuranceCard : insuranceCards) {
                 writer.write(insuranceCardToString(insuranceCard));

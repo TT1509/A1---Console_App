@@ -13,10 +13,10 @@ public class Claim implements ClaimProcessManager {
     private List<Claim> documents;
     private double claimAmount;
     private String status;
-    private String receiverBankInfo;
+    private List<String> receiverBankInfo;
 
     // Constructor
-    public Claim(String claimID, Date claimDate, Customer insuredPerson, String cardNumber, Date examDate, List<String> documents, double claimAmount, String status, String receiverBankInfo) {
+    public Claim(String claimID, Date claimDate, Customer insuredPerson, String cardNumber, Date examDate, double claimAmount, String status) {
         this.claimID = "";
         this.claimDate = new Date();
         this.insuredPerson = null;
@@ -25,13 +25,13 @@ public class Claim implements ClaimProcessManager {
         this.documents = new ArrayList<>();
         this.claimAmount = 0.0;
         this.status = "";
-        this.receiverBankInfo = "";
+        this.receiverBankInfo = new ArrayList<>();
     }
 
     public Claim(String claimID, Date claimDate,
                  Customer insuredPerson, InsuranceCard cardNumber,
                  Date examDate, List<Claim> documents, double claimAmount,
-                 String status, String receiverBankInfo) {
+                 String status, List<String>  receiverBankInfo) {
         this.claimID = claimID;
         this.claimDate = claimDate;
         this.insuredPerson = insuredPerson;
@@ -100,11 +100,11 @@ public class Claim implements ClaimProcessManager {
         this.status = status;
     }
 
-    public String getReceiverBankInfo() {
+    public List<String> getReceiverBankInfo() {
         return receiverBankInfo;
     }
 
-    public void setReceiverBankInfo(String receiverBankInfo) {
+    public void setReceiverBankInfo(List<String> receiverBankInfo) {
         this.receiverBankInfo = receiverBankInfo;
     }
 
@@ -125,18 +125,40 @@ public class Claim implements ClaimProcessManager {
 
     static final String CLAIM_FILE = "resources/Claim.txt";
 
+    // Function to find and return a customer by ID
+    private static Customer findCustomerById(String customerId, List<Customer> customers) {
+        Optional<Customer> foundCustomer = customers.stream()
+                .filter(c -> c.getId().equals(customerId))
+                .findFirst();
+
+        return foundCustomer.orElse(null);
+    }
+
     @Override
     public void addClaim(Claim claim) {
         Scanner scanner = new Scanner(System.in);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(CLAIM_FILE, true))) {
             List<Claim> claims = getAllClaims(); // Load existing claims
+            List<Customer> customers = Customer.getAllCustomers(); // Load existing customers
 
-            // Prompt the user to input claim ID
-            System.out.println("Enter claim ID (f-xxxxxxxxxx):");
-            String claimID = scanner.nextLine();
+            String claimID;
+            // Prompt the user to input claim ID until a valid one is entered
+            do {
+                // Prompt the user to input claim ID
+                System.out.println("Enter claim ID (f-xxxxxxxxxx):");
+                claimID = scanner.nextLine();
+
+                // Check if the entered ID already exists
+                String finalClaimID = claimID;
+                if (claims.stream().anyMatch(c -> c.getClaimID().equals(finalClaimID))) {
+                    System.out.println("Claim with ID " + claimID + " already exists. Please choose a different ID.");
+                    claimID = null; // Reset claimID to prompt the user again
+                }
+            } while (claimID == null);
 
             // Check if the entered ID already exists
-            if (claims.stream().anyMatch(c -> c.getClaimID().equals(claimID))) {
+            String finalClaimID1 = claimID;
+            if (claims.stream().anyMatch(c -> c.getClaimID().equals(finalClaimID1))) {
                 System.out.println("Claim with ID " + claimID + " already exists. Please choose a different ID.");
                 return; // Exit the method without adding the claim
             }
@@ -146,16 +168,25 @@ public class Claim implements ClaimProcessManager {
             String claimDateString = scanner.nextLine();
             Date claimDate = parseDate(claimDateString);
 
-            // Prompt the user to input insured person's details
-            System.out.println("Enter insured person's full name:");
-            String fullName = scanner.nextLine();
+            // Prompt the user to input the customer ID of the insured person
+            System.out.println("Enter customer ID of the insured person (format: c-<7 numbers>):");
+            String customerId = scanner.nextLine();
+            // Find the customer with the provided ID
+            Customer insuredPerson = findCustomerById(customerId, customers);
+            // Check if the customer with the provided ID exists
+            if (insuredPerson != null) {
+                // Extract the insurance card ID from the customer information
+                String insuranceCardId = insuredPerson.getInsuranceCard().getCardNumber();
+                // Retrieve the insurance card details based on the insurance card ID
+                InsuranceCard insuranceCard = getInsuranceCardById(insuranceCardId);
+                // Continue with the claim creation process
+                claim.setInsuredPerson(insuredPerson);
+                claim.setCardNumber(insuranceCard);
+            } else {
+                System.out.println("Customer with ID " + customerId + " not found. Claim cannot be added.");
+                return; // Exit the method without adding the claim
+            }
 
-            // Create a new InsuranceCard object for the insured person using the addInsuranceCard function
-            InsuranceCard insuranceCard = InsuranceCard.addInsuranceCard(new Customer("", fullName, null, null));
-
-            // Prompt the user to input card number
-            System.out.println("Enter card number:");
-            String cardNumber = scanner.nextLine();
 
             // Prompt the user to input exam date
             System.out.println("Enter exam date (format: dd/MM/yyyy):");
@@ -165,7 +196,13 @@ public class Claim implements ClaimProcessManager {
             // Prompt the user to input documents list
             System.out.println("Enter documents list (comma-separated, e.g., document1.pdf,document2.pdf):");
             String[] documentsArray = scanner.nextLine().split(",");
-            List<String> documents = new ArrayList<>(Arrays.asList(documentsArray));
+            List<Claim> documents = new ArrayList<>();
+            for (String document : documentsArray) {
+                claim = Customer.stringToClaim(document);
+                if (claim != null) {
+                    documents.add(claim);
+                }
+            }
 
             // Prompt the user to input claim amount
             System.out.println("Enter claim amount:");
@@ -193,11 +230,18 @@ public class Claim implements ClaimProcessManager {
             }
 
             // Prompt the user to input receiver bank information
-            System.out.println("Enter receiver bank information (Bank – Name – Number):");
+            System.out.println("Enter receiver bank information (Bank – Name – Number, separated by commas):");
             String receiverBankInfo = scanner.nextLine();
+            // Split the input by commas to get individual pieces of bank information
+            String[] bankInfoArray = receiverBankInfo.split(",");
+            // Create a List to store the bank information
+            List<String> bankInfoList = Arrays.asList(bankInfoArray);
+            // Set the bank information to the claim
+            claim.setReceiverBankInfo(bankInfoList);
+
 
             // Create the Claim object using the input
-            claim = new Claim(claimID, claimDate, new Customer("", "", null, claims), cardNumber, examDate, documents, claimAmount, status, receiverBankInfo);
+            claim = new Claim(claimID, claimDate, insuredPerson, cardNumber, examDate, documents, claimAmount, status, bankInfoList);
 
             // Write the new claim data to the file
             writer.write(Customer.claimToString(claim));
@@ -209,6 +253,24 @@ public class Claim implements ClaimProcessManager {
             scanner.close();
         }
     }
+
+    private InsuranceCard getInsuranceCardById(String insuranceCardId) {
+        // Load all customers to search for the insurance card ID
+        List<Customer> customers = Customer.getAllCustomers();
+
+        // Iterate through each customer to find the insurance card with the provided ID
+        for (Customer customer : customers) {
+            InsuranceCard insuranceCard = customer.getInsuranceCard();
+            if (insuranceCard != null && insuranceCard.getCardNumber().equals(insuranceCardId)) {
+                // If the insurance card ID matches, return the insurance card
+                return insuranceCard;
+            }
+        }
+
+        // If no matching insurance card is found, return null
+        return null;
+    }
+
 
 
     @Override

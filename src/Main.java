@@ -6,10 +6,11 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        Customer customer= new Customer(); // Instantiate the Customer class
-        customer.addCustomer();
+//        Customer.addCustomer();
+        Customer.updateCustomer();
+
         InsuranceCard insuranceCard = new InsuranceCard();
-//        insuranceCard.addInsuranceCard();
+
 
 
         // Close the scanner

@@ -19,7 +19,7 @@ public class Customer{
         this.id = id;
         this.fullName = fullName;
         this.insuranceCard = insuranceCard;
-        this.claims = claims;
+        this.claims = new ArrayList<>();
     }
 
     public String getId() {
@@ -80,8 +80,12 @@ public class Customer{
             System.out.println("Enter customer full name:");
             String fullName = scanner.nextLine();
 
-            // Create a new Customer object with the provided details
-            Customer newCustomer = new Customer(id, fullName, null, null);
+            // Create a new InsuranceCard object for the customer using the addInsuranceCard function
+            InsuranceCard insuranceCard = InsuranceCard.addInsuranceCard(new Customer("", "", null, null));
+
+            // Write the ID of the insurance card to the file
+            Customer newCustomer = new Customer(id, fullName, insuranceCard, null);
+
             // Write the new customer data to the file
             writer.write(customerToString(newCustomer));
             writer.newLine();
@@ -92,6 +96,8 @@ public class Customer{
             scanner.close();
         }
     }
+
+
 
 
     static void updateCustomer() {
@@ -213,14 +219,12 @@ public class Customer{
     }
 
     static String customerToString(Customer customer) {
-        // Convert Customer object to a string representation for writing to file
-        // Format: id;fullName;insuranceCard;claims
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(customer.getId()).append(";");
         stringBuilder.append(customer.getFullName()).append(";");
         if (customer.getInsuranceCard() != null) {
             // Append insurance card details, including ID
-            stringBuilder.append(customer.getInsuranceCard().getCardNumber()).append(";");
+            stringBuilder.append(insuranceCardToString(customer.getInsuranceCard())).append(";");
         } else {
             // Append empty field if no insurance card
             stringBuilder.append(";");
@@ -231,8 +235,7 @@ public class Customer{
         return stringBuilder.toString();
     }
 
-    public static Customer stringToCustomer(String line) {
-        // Convert string from file to Customer object
+    static Customer stringToCustomer(String line) {
         String[] parts = line.split(";");
         if (parts.length >= 2) {
             String id = parts[0];
@@ -249,6 +252,7 @@ public class Customer{
         }
         return null;
     }
+
 
     private static String insuranceCardToString(InsuranceCard insuranceCard) {
         // Convert InsuranceCard object to a string representation

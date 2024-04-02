@@ -24,7 +24,7 @@ public class InsuranceCard {
 //        if (!isCustomerNameExist(cardHolder.getFullName())) {
 //            throw new IllegalArgumentException("Card holder's name must be an existing customer's name.");
 //        }
-        this.cardNumber = cardNumber;
+        this.cardNumber = UUID.randomUUID().toString();;
         this.cardHolder = cardHolder;
         this.policyOwner = policyOwner;
         this.expirationDate = expirationDate;
@@ -93,66 +93,46 @@ public class InsuranceCard {
 
     private static final String INSURANCE_FILE = "insuranceCard.txt";
 
-    public void addInsuranceCard() {
+    public static InsuranceCard addInsuranceCard(Customer cardHolder) {
         Scanner scanner = new Scanner(System.in);
+        InsuranceCard insuranceCard = null; // Initialize insurance card
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(INSURANCE_FILE, true));
              BufferedWriter customerWriter = new BufferedWriter(new FileWriter(Customer.CUSTOMER_FILE, true))) {
-            // Get all existing customers
-            List<Customer> customers = Customer.getAllCustomers();
 
-            // Display all customers
-            System.out.println("List of existing customers:");
-            for (Customer customer : customers) {
-                System.out.println("ID: " + customer.getId() + ", Name: " + customer.getFullName());
-            }
+            // Generate Random insurance card number
+            String cardNumber = UUID.randomUUID().toString();
 
-            // Prompt the user to input the ID of an existing customer
-            System.out.print("Enter the ID of an existing customer to use as cardholder: ");
-            String customerId = scanner.nextLine();
+            // Use the provided card holder
+            Customer customer = cardHolder;
 
-            // Find the customer by ID
-            Customer selectedCustomer = null;
-            for (Customer customer : customers) {
-                if (customer.getId().equals(customerId)) {
-                    selectedCustomer = customer;
-                    break;
-                }
-            }
+            // Prompt the admin to input policy holder's name
+            System.out.println("Enter policy holder name:");
+            String policyHolder = scanner.nextLine();
 
-            if (selectedCustomer != null) {
-                // Prompt the user to input insurance card details
-                System.out.println("Enter card number:");
-                String cardNumber = scanner.nextLine();
+            // Prompt the admin to input expiration date
+            System.out.println("Enter expiration date (format: dd/MM/yyyy):");
+            String expirationDateString = scanner.nextLine();
+            Date expirationDate = parseDate(expirationDateString);
 
-                // Prompt the admin to input policy owner's name
-                System.out.println("Enter policy owner's name:");
-                String policyOwner = scanner.nextLine();
+            // Create the InsuranceCard object using the input
+            insuranceCard = new InsuranceCard(cardNumber, customer, policyHolder, expirationDate);
 
-                // Prompt the admin to input expiration date
-                System.out.println("Enter expiration date (format: dd/MM/yyyy):");
-                String expirationDateString = scanner.nextLine();
-                Date expirationDate = parseDate(expirationDateString);
+            // Write the insurance card data to the file
+            writer.write(insuranceCardToString(insuranceCard));
+            writer.newLine();
+            System.out.println("Insurance card added successfully.");
 
-                // Create the InsuranceCard object using the input
-                InsuranceCard insuranceCard = new InsuranceCard(cardNumber, selectedCustomer, policyOwner, expirationDate);
-
-                // Write the insurance card data to the file
-                writer.write(insuranceCardToString(insuranceCard));
-                writer.newLine();
-                System.out.println("Insurance card added successfully.");
-
-                // Update the corresponding customer entry with insurance card ID
-                updateCustomerWithInsuranceCard(insuranceCard, selectedCustomer);
-
-            } else {
-                System.out.println("No customer found with the specified ID.");
-            }
         } catch (IOException e) {
             System.err.println("Error adding insurance card: " + e.getMessage());
         } finally {
             scanner.close();
         }
+        return insuranceCard;
     }
+
+
+
+
 
     private void updateCustomerWithInsuranceCard(InsuranceCard insuranceCard, Customer customer) {
         // Update the selected customer's insurance card

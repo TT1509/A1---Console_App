@@ -60,19 +60,38 @@ public class Customer{
                 '}';
     }
 
-    static final String CUSTOMER_FILE = "Customer.txt";
+    static final String CUSTOMER_FILE = "resources/Customer.txt";
+
+    static boolean isValidCustomerId(String id) {
+        // Check if the ID starts with "c-" and has 7 digits after that
+        return id.matches("^c-\\d{7}$");
+    }
 
     static void addCustomer() {
         Scanner scanner = new Scanner(System.in);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(CUSTOMER_FILE, true))) {
             List<Customer> customers = getAllCustomers(); // Load existing customers
 
-            // Prompt the user to input customer details
-            System.out.println("Enter customer ID:");
-            String id = scanner.nextLine();
+            String id;
+            // Prompt the user to input customer details until a valid ID is entered
+            do {
+                System.out.println("Enter customer ID (format: c-<7 numbers>):");
+                id = scanner.nextLine();
+                if (!isValidCustomerId(id)) {
+                    System.out.println("Invalid ID format. Please enter a valid ID.");
+                    addCustomer();
+                } else {
+                    String finalId = id;
+                    if (customers.stream().anyMatch(c -> c.getId().equals(finalId))) {
+                        System.out.println("Customer with ID " + id + " already exists. Please choose a different ID.");
+                        id = null; // Reset id to prompt the user again
+                    }
+                }
+            } while (id == null);
 
             // Check if the entered ID already exists
-            if (customers.stream().anyMatch(c -> c.getId().equals(id))) {
+            String finalId1 = id;
+            if (customers.stream().anyMatch(c -> c.getId().equals(finalId1))) {
                 System.out.println("Customer with ID " + id + " already exists. Please choose a different ID.");
                 return; // Exit the method without adding the customer
             }
@@ -306,7 +325,7 @@ public class Customer{
         return claims;
     }
 
-    private static String claimToString(Claim claim) {
+    static String claimToString(Claim claim) {
         // Convert Claim object to a string representation
         // Format: id;claimDate;insuredPersonId;cardNumber;examDate;documents;claimAmount;status;receiverBankInfo
         return String.join(";", claim.getClaimID(), claim.getClaimDate().toString(), claim.getInsuredPerson().getId(), claim.getCardNumber().getCardNumber(), claim.getExamDate().toString(),String.valueOf(claim.getClaimAmount()), claim.getStatus(), claim.getReceiverBankInfo());

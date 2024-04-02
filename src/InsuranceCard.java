@@ -24,7 +24,7 @@ public class InsuranceCard {
 //        if (!isCustomerNameExist(cardHolder.getFullName())) {
 //            throw new IllegalArgumentException("Card holder's name must be an existing customer's name.");
 //        }
-        this.cardNumber = UUID.randomUUID().toString();;
+        this.cardNumber = cardNumber;;
         this.cardHolder = cardHolder;
         this.policyOwner = policyOwner;
         this.expirationDate = expirationDate;
@@ -91,7 +91,7 @@ public class InsuranceCard {
                 '}';
     }
 
-    private static final String INSURANCE_FILE = "insuranceCard.txt";
+    private static final String INSURANCE_FILE = "resources/insuranceCard.txt";
 
     public static InsuranceCard addInsuranceCard(Customer cardHolder) {
         Scanner scanner = new Scanner(System.in);
@@ -99,8 +99,17 @@ public class InsuranceCard {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(INSURANCE_FILE, true));
              BufferedWriter customerWriter = new BufferedWriter(new FileWriter(Customer.CUSTOMER_FILE, true))) {
 
-            // Generate Random insurance card number
-            String cardNumber = UUID.randomUUID().toString();
+            // Generate insurance card number with 10 digits
+            String cardNumber;
+            boolean validCardNumber;
+            do {
+                System.out.println("Enter 10-digit insurance card number:");
+                cardNumber = scanner.nextLine();
+                validCardNumber = cardNumber.matches("\\d{10}"); // Check if it has 10 digits
+                if (!validCardNumber) {
+                    System.out.println("Invalid card number format. Please enter a 10-digit number.");
+                }
+            } while (!validCardNumber);
 
             // Use the provided card holder
             Customer customer = cardHolder;
@@ -129,6 +138,7 @@ public class InsuranceCard {
         }
         return insuranceCard;
     }
+
 
 
 
@@ -260,7 +270,7 @@ public class InsuranceCard {
     }
 
 
-    public List<InsuranceCard> getAllInsuranceCards() {
+    public static List<InsuranceCard> getAllInsuranceCards() {
         List<InsuranceCard> insuranceCards = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(INSURANCE_FILE))) {
             String line;

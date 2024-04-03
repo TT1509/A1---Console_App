@@ -47,7 +47,7 @@ public class Customer{
         this.insuranceCard = insuranceCard;
     }
 
-    public List<Claim> getClaims() {
+    public ArrayList<Claim> getClaims() {
         return claims;
     }
 
@@ -354,23 +354,25 @@ public class Customer{
         return claims;
     }
 
-    static String claimToString(Claim claim) {
-        // Convert Claim object to a string representation
-        // Format: id;claimDate;insuredPersonId;cardNumber;examDate;documents;claimAmount;status;receiverBankInfo
+    public static String claimToString(Claim claim) {
+        if (claim == null) {
+            return ""; // or throw an exception, depending on your requirements
+        }
 
-        // Convert the lists to string representations
-        String documentsAsString = String.join(",", claim.getDocuments());
-        String receiverBankInfoAsString = String.join(";", claim.getReceiverBankInfo());
-
-        // Check if cardNumber is null
+        // Check for null values in each attribute and handle them appropriately
+        String claimID = claim.getClaimID() != null ? claim.getClaimID() : "";
+        String claimDate = claim.getClaimDate() != null ? claim.getClaimDate().toString() : "";
+        String insuredPersonId = claim.getInsuredPerson() != null ? claim.getInsuredPerson().getId() : "";
         String cardNumber = claim.getCardNumber() != null ? claim.getCardNumber().getCardNumber() : "";
+        String examDate = claim.getExamDate() != null ? claim.getExamDate().toString() : "";
+        String documentsAsString = claim.getDocuments() != null ? String.join(",", claim.getDocuments()) : "";
+        double claimAmount = claim.getClaimAmount(); // Assuming this cannot be null
+        String status = claim.getStatus() != null ? claim.getStatus() : "";
+        String receiverBankInfoAsString = claim.getReceiverBankInfo() != null ? String.join(";", claim.getReceiverBankInfo()) : "";
 
         // Join all attributes together using the semicolon separator
-        return String.join(";", claim.getClaimID(), claim.getClaimDate().toString(),
-                claim.getInsuredPerson().getId(), cardNumber,
-                claim.getExamDate().toString(), documentsAsString,
-                String.valueOf(claim.getClaimAmount()), claim.getStatus(),
-                receiverBankInfoAsString);
+        return String.join(";", claimID, claimDate, insuredPersonId, cardNumber, examDate,
+                documentsAsString, String.valueOf(claimAmount), status, receiverBankInfoAsString);
     }
 
 

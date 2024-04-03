@@ -8,6 +8,7 @@ public class Claim implements ClaimProcessManager {
     private Customer insuredPerson;
     private InsuranceCard cardNumber;
     private Date examDate;
+
     private List<String> documents; // Changed type to List<String>
     private double claimAmount;
     private String status;
@@ -84,6 +85,9 @@ public class Claim implements ClaimProcessManager {
 
     public List<String> getDocuments() {
         return documents;
+    }
+    public void setDocuments(List<String> documents) {
+        this.documents = documents;
     }
 
     public double getClaimAmount() {
@@ -245,17 +249,30 @@ public class Claim implements ClaimProcessManager {
 
             // Prompt the user to input documents list
             System.out.println("Enter documents information:");
-            // Scanner for name
+            // Scanner for claim id
+            System.out.print("Enter claim ID: ");
+            String enteredClaimId = scanner.nextLine();
+            // Check if the entered claim ID matches the one entered earlier
+            if (!enteredClaimId.equals(claimID)) {
+                System.out.println("Entered claim ID does not match the previously entered ID.");
+                // Handle the mismatch as needed (e.g., ask the user to re-enter)
+                return;
+            }
+            // Scanner for card number
+            System.out.print("Enter card number: ");
+            String cardNum = scanner.nextLine();
+            // Scanner for document name
             System.out.print("Enter document name: ");
             String documentName = scanner.nextLine();
-            // Create a List to store the bank information
-            List<String> document = new ArrayList<>();
-            // Add bank, name, and number to the list
-            document.add(claimID);
-            document.add(String.valueOf(cardNumber));
-            document.add(documentName);
-            // Set the bank information to the claim
-            claim.setReceiverBankInfo(document);
+            // Create a List to store the document information
+            List<String> documentInfo = new ArrayList<>();
+            // Add claim ID, card number, and document name to the list
+            documentInfo.add(claimID);
+            documentInfo.add(cardNum); // Assuming cardNumber is a String
+            documentInfo.add(documentName);
+            // Set the document information to the claim
+            claim.setDocuments(documentInfo);
+
 
 
             // Prompt the user to input claim amount

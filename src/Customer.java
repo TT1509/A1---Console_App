@@ -1,4 +1,5 @@
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -69,32 +70,24 @@ public class Customer{
 
     static void addCustomer() {
         Scanner scanner = new Scanner(System.in);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(CUSTOMER_FILE, true))) {
+        try {
             List<Customer> customers = getAllCustomers(); // Load existing customers
 
             String id;
             // Prompt the user to input customer details until a valid ID is entered
             do {
-                System.out.println("Enter customer ID (format: c-<7 numbers>):");
+                System.out.println("Enter customer ID (format: c-7 numbers>):");
                 id = scanner.nextLine();
                 if (!isValidCustomerId(id)) {
                     System.out.println("Invalid ID format. Please enter a valid ID.");
-                    addCustomer();
-                } else {
-                    String finalId = id;
-                    if (customers.stream().anyMatch(c -> c.getId().equals(finalId))) {
-                        System.out.println("Customer with ID " + id + " already exists. Please choose a different ID.");
-                        id = null; // Reset id to prompt the user again
-                    }
+                    continue;
+                }
+                String finalId = id;
+                if (customers.stream().anyMatch(c -> c.getId().equals(finalId))) {
+                    System.out.println("Customer with ID " + id + " already exists. Please choose a different ID.");
+                    return; // Exit the method without adding the customer
                 }
             } while (id == null);
-
-            // Check if the entered ID already exists
-            String finalId1 = id;
-            if (customers.stream().anyMatch(c -> c.getId().equals(finalId1))) {
-                System.out.println("Customer with ID " + id + " already exists. Please choose a different ID.");
-                return; // Exit the method without adding the customer
-            }
 
             System.out.println("Enter customer full name:");
             String fullName = scanner.nextLine();
@@ -102,12 +95,14 @@ public class Customer{
             // Create a new InsuranceCard object for the customer using the addInsuranceCard function
             InsuranceCard insuranceCard = InsuranceCard.addInsuranceCard(new Customer("", "", null, null));
 
-            // Write the ID of the insurance card to the file
-            Customer newCustomer = new Customer(id, fullName, insuranceCard, null);
+            // Create a new Customer object with the provided details
+            Customer newCustomer = new Customer(id, fullName, insuranceCard, new ArrayList<>());
+
+            // Add the new customer to the list of customers
+            customers.add(newCustomer);
 
             // Write the new customer data to the file
-            writer.write(customerToString(newCustomer));
-            writer.newLine();
+            saveCustomersToFile(customers);
             System.out.println("Customer added successfully.");
         } catch (IOException e) {
             System.err.println("Error adding customer: " + e.getMessage());
@@ -115,6 +110,7 @@ public class Customer{
             scanner.close();
         }
     }
+
 
 
     static void deleteCustomer() {
@@ -314,7 +310,7 @@ public class Customer{
             String cardHolderName = (cardHolder != null) ? cardHolder.getFullName() : "";
             return String.join(";", insuranceCard.getCardNumber(), cardHolderName, insuranceCard.getPolicyOwner(), insuranceCard.getExpirationDate().toString());
         }
-        return "";
+        return null;
     }
 
     private static InsuranceCard stringToInsuranceCard(String line) {
@@ -326,7 +322,7 @@ public class Customer{
             String policyOwnerName = parts[2];
             Date expirationDate = parseDate(parts[3]); // Assuming parts[3] contains the expiration date
             // Create a dummy Customer with the card holder's name
-            Customer cardHolder = new Customer("", cardHolderName, null, null);
+            Customer cardHolder = new Customer("", cardHolderName, insuranceCard, null);
             return new InsuranceCard(cardNumber, cardHolder, policyOwnerName, expirationDate);
         }
         return null;
@@ -361,8 +357,24 @@ public class Customer{
     static String claimToString(Claim claim) {
         // Convert Claim object to a string representation
         // Format: id;claimDate;insuredPersonId;cardNumber;examDate;documents;claimAmount;status;receiverBankInfo
-        return String.join(";", claim.getClaimID(), claim.getClaimDate().toString(), claim.getInsuredPerson().getId(), claim.getCardNumber().getCardNumber(), claim.getExamDate().toString(),String.valueOf(claim.getClaimAmount()), claim.getStatus(), claim.getReceiverBankInfo());
+
+        // Convert the lists to string representations
+        String documentsAsString = String.join(",", claim.getDocuments());
+        String receiverBankInfoAsString = String.join(";", claim.getReceiverBankInfo());
+
+        // Check if cardNumber is null
+        String cardNumber = claim.getCardNumber() != null ? claim.getCardNumber().getCardNumber() : "";
+
+        // Join all attributes together using the semicolon separator
+        return String.join(";", claim.getClaimID(), claim.getClaimDate().toString(),
+                claim.getInsuredPerson().getId(), cardNumber,
+                claim.getExamDate().toString(), documentsAsString,
+                String.valueOf(claim.getClaimAmount()), claim.getStatus(),
+                receiverBankInfoAsString);
     }
+
+
+
 
     static Claim stringToClaim(String line) {
         // Convert string from file to Claim object
@@ -373,12 +385,12 @@ public class Customer{
             String insuredPersonId = parts[2]; // Get the ID directly from the file
             InsuranceCard cardNumber = stringToInsuranceCard(parts[3]);
             Date examDate = parseDate(parts[4]);
-            List<Claim> documents = stringToClaims(parts[5]);
+            List<String> documents = Collections.singletonList(parts[5]);
             double claimAmount = Double.parseDouble(parts[6]);
             String status = parts[7];
-            String receiverBankInfo = parts[8];
+            List<String> receiverBankInfo = Collections.singletonList(parts[8]);
             // Create a dummy Customer with the insuredPersonId
-            Customer insuredPerson = new Customer(insuredPersonId, "", null, null);
+            Customer insuredPerson = new Customer(insuredPersonId, "", insuranceCard, null);
             return new Claim(id, claimDate, insuredPerson, cardNumber, examDate, documents, claimAmount, status, receiverBankInfo);
         }
         return null;
@@ -386,10 +398,14 @@ public class Customer{
 
 
 
-    private static Date parseDate(String dateString) {
-        // Parse string to Date
-        // You can implement your date parsing logic here
-        return new Date(); // Placeholder implementation, replace with actual parsing
+    static Date parseDate(String dateString) {
+        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+        try {
+            return format.parse(dateString);
+        } catch (java.text.ParseException e) {
+            System.out.println("Invalid date format. Please use dd/MM/yyyy format.");
+            return null;
+        }
     }
 
     static void saveCustomersToFile(List<Customer> customers) throws IOException {

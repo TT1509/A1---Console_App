@@ -7,10 +7,11 @@ public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 //        Customer.addCustomer();
-        Customer.updateCustomer();
 
-        InsuranceCard insuranceCard = new InsuranceCard();
 
+//        InsuranceCard.getInsuranceCardById();
+        Claim claim = new Claim();
+        claim.addClaim();
 
 
         // Close the scanner

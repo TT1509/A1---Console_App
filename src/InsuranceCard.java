@@ -91,7 +91,7 @@ public class InsuranceCard {
                 '}';
     }
 
-    private static final String INSURANCE_FILE = "resources/insuranceCard.txt";
+    static final String INSURANCE_FILE = "resources/insuranceCard.txt";
 
     public static InsuranceCard addInsuranceCard(Customer cardHolder) {
         Scanner scanner = new Scanner(System.in);
@@ -121,7 +121,7 @@ public class InsuranceCard {
             // Prompt the admin to input expiration date
             System.out.println("Enter expiration date (format: dd/MM/yyyy):");
             String expirationDateString = scanner.nextLine();
-            Date expirationDate = parseDate(expirationDateString);
+            Date expirationDate = Customer.parseDate(expirationDateString);
 
             // Create the InsuranceCard object using the input
             insuranceCard = new InsuranceCard(cardNumber, customer, policyHolder, expirationDate);
@@ -201,7 +201,7 @@ public class InsuranceCard {
                 // Prompt the admin to input expiration date
                 System.out.println("Enter new expiration date (format: dd/MM/yyyy):");
                 String expirationDateString = scanner.nextLine();
-                Date expirationDate = parseDate(expirationDateString);
+                Date expirationDate = Customer.parseDate(expirationDateString);
 
                 // Update the insurance card details in the list
                 insuranceCards.get(index).setPolicyOwner(policyOwner);
@@ -306,7 +306,7 @@ public class InsuranceCard {
             String cardNumber = parts[0];
             String customerId = parts[1]; // Assuming parts[1] contains the customer ID
             String policyOwnerName = parts[2];
-            Date expirationDate = parseDate(parts[3]);
+            Date expirationDate = Customer.parseDate(parts[3]);
             // Retrieve the customer by ID
             Customer customer = new Customer(); // Instantiate an object that implements CustomerManager
             Customer cardHolder = Customer.getCustomerById(); // Call the getCustomerById method
@@ -321,18 +321,21 @@ public class InsuranceCard {
         return null;
     }
 
-
-    // Helper method to parse date from string
-    private static Date parseDate(String dateString) {
-        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
-        try {
-            return format.parse(dateString);
-        } catch (java.text.ParseException e) {
-            System.out.println("Invalid date format. Please use dd/MM/yyyy format.");
-            return null;
+    static boolean checkCardNumberExists(String cardNumber) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(INSURANCE_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(";");
+                // Assuming the card number is at index 0 in each line
+                if (parts.length > 0 && parts[0].equals(cardNumber)) {
+                    return true; // Card number exists
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading InsuranceCard.txt: " + e.getMessage());
         }
+        return false; // Card number not found
     }
-
 
     // Method to write insurance card data to a .txt file
     // Method to write insurance card data to the Customer.txt file and update existing customer

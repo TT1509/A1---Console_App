@@ -2,9 +2,9 @@ import java.util.List;
 
 public interface ClaimProcessManager {
 
-    void addClaim(Claim claim);
-    void updateClaim(Claim claim);
-    void deleteClaim(String claimID);
-    Claim getOneClaim(String claimID);
+    void addClaim();
+    void updateClaim();
+    void deleteClaim();
+    Claim getClaimById();
     List<Claim> getAllClaims();
 }

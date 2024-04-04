@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.List;
 
 public class PolicyHolder extends Customer {
     private ArrayList<String> dependents;
@@ -8,7 +7,7 @@ public class PolicyHolder extends Customer {
         super();
         dependents = null;
     }
-    public PolicyHolder(String id, String fullName, InsuranceCard insuranceCard, List<Claim> claims) {
+    public PolicyHolder(String id, String fullName, InsuranceCard insuranceCard, ArrayList<Claim> claims) {
         super(id, fullName, insuranceCard, claims);
         this.dependents = new ArrayList<>();
     }

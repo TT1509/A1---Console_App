@@ -1,4 +1,4 @@
-import java.util.List;
+import java.util.ArrayList;
 
 public class Dependent extends Customer {
     private String policyHolder;
@@ -7,7 +7,7 @@ public class Dependent extends Customer {
         policyHolder = null;
     }
 
-    public Dependent(String id, String fullName, InsuranceCard insuranceCard, List<Claim> claims, String policyHolder) {
+    public Dependent(String id, String fullName, InsuranceCard insuranceCard, ArrayList<Claim> claims, String policyHolder) {
         super(id, fullName, insuranceCard, claims);
         this.policyHolder = policyHolder;
     }

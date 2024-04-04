@@ -10,6 +10,8 @@ public class Customer{
     private String id;
     private String fullName;
     private static InsuranceCard insuranceCard;
+
+
     private ArrayList<Claim> claims;
 
     //Constructors
@@ -39,7 +41,7 @@ public class Customer{
         this.fullName = fullName;
     }
 
-    public InsuranceCard getInsuranceCard() {
+    public static InsuranceCard getInsuranceCard() {
         return insuranceCard;
     }
 
@@ -50,6 +52,11 @@ public class Customer{
     public ArrayList<Claim> getClaims() {
         return claims;
     }
+
+    public void setClaims(ArrayList<Claim> claims) {
+        this.claims = claims;
+    }
+
 
     @Override
     public String toString() {
@@ -280,11 +287,12 @@ public class Customer{
             // Append empty field if no insurance card
             stringBuilder.append(";");
         }
-        if (customer.getClaims() != null) {
+        if (customer.getClaims() != null && !customer.getClaims().isEmpty()) {
             stringBuilder.append(claimsToString(customer.getClaims()));
         }
         return stringBuilder.toString();
     }
+
 
     static Customer stringToCustomer(String line) {
         String[] parts = line.split(";");
@@ -363,7 +371,7 @@ public class Customer{
         String claimID = claim.getClaimID() != null ? claim.getClaimID() : "";
         String claimDate = claim.getClaimDate() != null ? claim.getClaimDate().toString() : "";
         String insuredPersonId = claim.getInsuredPerson() != null ? claim.getInsuredPerson().getId() : "";
-        String cardNumber = claim.getCardNumber() != null ? claim.getCardNumber().getCardNumber() : "";
+        String cardNumber = Customer.getInsuranceCard() != null ? Customer.getInsuranceCard().getCardNumber() : "";
         String examDate = claim.getExamDate() != null ? claim.getExamDate().toString() : "";
         String documentsAsString = claim.getDocuments() != null ? String.join(",", claim.getDocuments()) : "";
         double claimAmount = claim.getClaimAmount(); // Assuming this cannot be null

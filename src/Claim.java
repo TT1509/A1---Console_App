@@ -148,7 +148,8 @@ public class Claim implements ClaimProcessManager {
     @Override
     public void addClaim() {
         Scanner scanner = new Scanner(System.in);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(CLAIM_FILE, true))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(CLAIM_FILE, true));
+             BufferedWriter customerWriter = new BufferedWriter(new FileWriter(Customer.CUSTOMER_FILE, true))) {
             List<Claim> claims = getAllClaims(); // Load existing claims
 
             String claimID;
@@ -332,6 +333,15 @@ public class Claim implements ClaimProcessManager {
             writer.write(Customer.claimToString(newClaim));
             writer.newLine();
             System.out.println("Claim added successfully.");
+
+            // Add the claim to the customer's data
+            StringBuilder customerData = new StringBuilder();
+            customerData.append(insuredPerson.getId()).append(";").append(insuredPerson.getFullName()).append(";")
+                    .append(insuredPerson.getInsuranceCard().getCardNumber()).append(";").append(claimID);
+            customerWriter.write(customerData.toString());
+            customerWriter.newLine();
+            System.out.println("Claim added to customer's data successfully.");
+
         } catch (IOException e) {
             System.err.println("Error adding claim: " + e.getMessage());
         } finally {
@@ -500,7 +510,6 @@ public class Claim implements ClaimProcessManager {
         return claims;
     }
 
-    // Function to check if the entered card number exists in the InsuranceCard.txt file
 
 
     static void saveClaimsToFile(List<Claim> claims) throws IOException {

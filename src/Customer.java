@@ -16,7 +16,7 @@ public class Customer{
     public Customer() {
     }
 
-    public Customer(String id, String fullName, InsuranceCard insuranceCard, List<Claim> claims) {
+    public Customer(String id, String fullName, InsuranceCard insuranceCard, ArrayList<Claim> claims) {
         this.id = id;
         this.fullName = fullName;
         this.insuranceCard = insuranceCard;
@@ -292,9 +292,9 @@ public class Customer{
             String id = parts[0];
             String fullName = parts[1];
             InsuranceCard insuranceCard = InsuranceCard.stringToInsuranceCard(parts[2]);
-            List<Claim> claims = null;
+            ArrayList<Claim> claims = null;
             if (parts.length >= 4 && !parts[3].isEmpty()) {
-                claims = stringToClaims(parts[3]);
+                claims = (ArrayList<Claim>) stringToClaims(parts[3]);
             }
             return new Customer(id, fullName, insuranceCard, claims);
         }

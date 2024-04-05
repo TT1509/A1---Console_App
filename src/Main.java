@@ -6,13 +6,16 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        Customer customer = new Customer();
+//        Customer customer = new Customer();
 //        Customer.addCustomer();
-
+        PolicyHolder policyHolder = new PolicyHolder();
+        PolicyHolder.createPolicyHolder();
+        Dependent dependent = new Dependent();
+//        Dependent.createDependent();
 
 //        InsuranceCard.getInsuranceCardById();
         Claim claim = new Claim();
-        claim.addClaim();
+//        claim.addClaim();
 
 
         // Close the scanner

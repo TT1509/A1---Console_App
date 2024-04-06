@@ -1,5 +1,4 @@
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class InsuranceCard {
@@ -93,53 +92,37 @@ public class InsuranceCard {
 
     static final String INSURANCE_FILE = "resources/insuranceCard.txt";
 
-    public static InsuranceCard addInsuranceCard(Customer cardHolder) {
+
+    public static InsuranceCard addInsuranceCard() {
         Scanner scanner = new Scanner(System.in);
-        InsuranceCard insuranceCard = null; // Initialize insurance card
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(INSURANCE_FILE, true));
-             BufferedWriter customerWriter = new BufferedWriter(new FileWriter(Customer.CUSTOMER_FILE, true))) {
-
-            // Generate insurance card number with 10 digits
-            String cardNumber;
-            boolean validCardNumber;
-            do {
-                System.out.println("Enter 10-digit insurance card number:");
-                cardNumber = scanner.nextLine();
-                validCardNumber = cardNumber.matches("\\d{10}"); // Check if it has 10 digits
-                if (!validCardNumber) {
-                    System.out.println("Invalid card number format. Please enter a 10-digit number.");
-                }
-            } while (!validCardNumber);
-
-            // Use the provided card holder
-            Customer customer = cardHolder;
-
-            // Prompt the admin to input policy holder's name
-            System.out.println("Enter policy holder name:");
-            String policyHolder = scanner.nextLine();
-
-            // Prompt the admin to input expiration date
+        try {
+            // Prompt the user to input the insurance card details
+            String cardNumber = generateCardNumber();
+            System.out.println("Generated insurance card number: " + cardNumber);
+            System.out.println("Enter policy owner:");
+            String policyOwner = scanner.nextLine();
             System.out.println("Enter expiration date (format: dd/MM/yyyy):");
             String expirationDateString = scanner.nextLine();
             Date expirationDate = Customer.parseDate(expirationDateString);
 
-            // Create the InsuranceCard object using the input
-            insuranceCard = new InsuranceCard(cardNumber, customer, policyHolder, expirationDate);
+            // Create a new InsuranceCard object
+            InsuranceCard insuranceCard = new InsuranceCard(cardNumber, null, policyOwner, expirationDate);
 
-            // Write the insurance card data to the file
-            writer.write(insuranceCardToString(insuranceCard));
-            writer.newLine();
             System.out.println("Insurance card added successfully.");
-
-        } catch (IOException e) {
-            System.err.println("Error adding insurance card: " + e.getMessage());
+            return insuranceCard; // Return the created insurance card
         } finally {
             scanner.close();
         }
-        return insuranceCard;
     }
 
-
+    private static String generateCardNumber() {
+        StringBuilder sb = new StringBuilder();
+        Random random = new Random();
+        for (int i = 0; i < 10; i++) {
+            sb.append(random.nextInt(10)); // Append a random digit (0-9)
+        }
+        return sb.toString();
+    }
 
 
 

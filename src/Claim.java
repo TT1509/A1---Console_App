@@ -145,35 +145,34 @@ public class Claim implements ClaimProcessManager {
         return claimID.matches("^f-\\d{10}$");
     }
 
+    private static final Set<String> generatedClaimIds = new HashSet<>();
+
+    public static String generateClaimId() {
+        Random random = new Random();
+        String claimId;
+        do {
+            StringBuilder sb = new StringBuilder("f-");
+            for (int i = 0; i < 10; i++) {
+                sb.append(random.nextInt(10)); // Generate a random digit from 0 to 9
+            }
+            claimId = sb.toString();
+        } while (generatedClaimIds.contains(claimId)); // Check uniqueness
+        generatedClaimIds.add(claimId); // Add generated ID to set
+        return claimId;
+    }
+
     @Override
     public void addClaim() {
         Scanner scanner = new Scanner(System.in);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(CLAIM_FILE, true));
              BufferedWriter customerWriter = new BufferedWriter(new FileWriter(Customer.CUSTOMER_FILE, true))) {
-            List<Claim> claims = getAllClaims(); // Load existing claims
 
             String claimID;
-            Claim claim = new Claim(); // Declare the claim variable here
+            Claim claim = new Claim();
 
-
-            // Prompt the user to input claim ID until a valid one is entered
-            do {
-                // Prompt the user to input claim ID
-                System.out.println("Enter claim ID (format: f-10 numbers):");
-                claimID = scanner.nextLine();
-                if (!isValidClaimId(claimID)) {
-                    System.out.println("Invalid ID format. Please enter a valid ID.");
-                    addClaim();
-                } else {
-                    String finalClaimID = claimID;
-                    if (claims.stream().anyMatch(c -> getClaimID().equals(finalClaimID))) {
-                        System.out.println("Claim with ID " + claimID + " already exists. Please choose a different ID.");
-                        claimID = null; // Reset claimID to prompt the user again
-                    }
-                }
-                // Check if the entered ID already exists
-
-            } while (claimID == null);
+            // Generate claim id
+            claimID = generateClaimId();
+            System.out.println("Generated Claim Id: " + claimID);
 
 
             // Automatically set claim date to the current date
@@ -251,7 +250,7 @@ public class Claim implements ClaimProcessManager {
             // Prompt the user to input documents list
             System.out.println("Enter documents information:");
             // Scanner for claim id
-            System.out.print("Enter claim ID: ");
+            System.out.print("Enter claim ID (Please enter the generated claim id): ");
             String enteredClaimId = scanner.nextLine();
             // Check if the entered claim ID matches the one entered earlier
             if (!enteredClaimId.equals(claimID)) {

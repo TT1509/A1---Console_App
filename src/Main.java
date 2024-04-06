@@ -152,7 +152,7 @@ public class Main {
         }
     }
 
-    private static void handlePolicyHolderMenu(Scanner scanner) {
+    private static void handlePolicyHolderMenu(Scanner scanner) throws IOException {
         System.out.println("Policy holders menu:");
         System.out.println("1. Add policy holders");
         System.out.println("2. Delete policy holders");

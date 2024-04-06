@@ -93,16 +93,10 @@ public class InsuranceCard {
 
     static final String INSURANCE_FILE = "resources/insuranceCard.txt";
 
-    public static InsuranceCard addInsuranceCard(Customer cardHolder) {
-        if (cardHolder.getInsuranceCard() != null) {
-            System.out.println("This customer already has an insurance card associated with them.");
-            return null;
-        }
-
+    public static InsuranceCard addInsuranceCard() {
         Scanner scanner = new Scanner(System.in);
         InsuranceCard insuranceCard = null; // Initialize insurance card
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(INSURANCE_FILE, true));
-             BufferedWriter customerWriter = new BufferedWriter(new FileWriter(Customer.CUSTOMER_FILE, true))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(INSURANCE_FILE, true))) {
 
             // Generate insurance card number with 10 digits
             String cardNumber;
@@ -112,9 +106,6 @@ public class InsuranceCard {
                 validCardNumber = true; // Assuming generated card number is valid
                 // You can add additional validation logic here if required
             } while (!validCardNumber);
-
-            // Use the provided card holder
-            Customer customer = cardHolder;
 
             // Prompt the admin to input policy holder's name
             System.out.println("Enter policy owner name:");
@@ -126,10 +117,7 @@ public class InsuranceCard {
             Date expirationDate = Customer.parseDate(expirationDateString);
 
             // Create the InsuranceCard object using the input
-            insuranceCard = new InsuranceCard(cardNumber, customer, policyOwner, expirationDate);
-
-            // Associate the insurance card with the card holder
-            cardHolder.setInsuranceCard(insuranceCard);
+            insuranceCard = new InsuranceCard(cardNumber, null, policyOwner, expirationDate);
 
             // Write the insurance card data to the file
             writer.write(insuranceCardToString(insuranceCard));

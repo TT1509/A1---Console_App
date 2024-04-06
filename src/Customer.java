@@ -70,37 +70,36 @@ public class Customer{
 
     static final String CUSTOMER_FILE = "resources/Customer.txt";
 
-    static boolean isValidCustomerId(String id) {
-        // Check if the ID starts with "c-" and has 7 digits after that
-        return id.matches("^c-\\d{7}$");
-    }
 
+    private static final Set<String> generatedIds = new HashSet<>();
+
+    public static String generateCustomerId() {
+        Random random = new Random();
+        String customerId;
+        do {
+            StringBuilder sb = new StringBuilder("c-");
+            for (int i = 0; i < 7; i++) {
+                sb.append(random.nextInt(10)); // Generate a random digit from 0 to 9
+            }
+            customerId = sb.toString();
+        } while (generatedIds.contains(customerId)); // Check uniqueness
+        generatedIds.add(customerId); // Add generated ID to set
+        return customerId;
+    }
     static void addCustomer() {
         Scanner scanner = new Scanner(System.in);
         try {
             List<Customer> customers = getAllCustomers(); // Load existing customers
 
-            String id;
-            // Prompt the user to input customer details until a valid ID is entered
-            do {
-                System.out.println("Enter customer ID (format: c-7 numbers>):");
-                id = scanner.nextLine();
-                if (!isValidCustomerId(id)) {
-                    System.out.println("Invalid ID format. Please enter a valid ID.");
-                    continue;
-                }
-                String finalId = id;
-                if (customers.stream().anyMatch(c -> c.getId().equals(finalId))) {
-                    System.out.println("Customer with ID " + id + " already exists. Please choose a different ID.");
-                    return; // Exit the method without adding the customer
-                }
-            } while (id == null);
+
+            String id = generateCustomerId();
+            System.out.println("Generated Customer Id :" + id);
 
             System.out.println("Enter customer full name:");
             String fullName = scanner.nextLine();
 
             // Create a new InsuranceCard object for the customer using the addInsuranceCard function
-            InsuranceCard insuranceCard = InsuranceCard.addInsuranceCard(new Customer("", "", null, null));
+            InsuranceCard insuranceCard = InsuranceCard.addInsuranceCard();
 
             // Create a new Customer object with the provided details
             Customer newCustomer = new Customer(id, fullName, insuranceCard, new ArrayList<>());
@@ -310,7 +309,7 @@ public class Customer{
     }
 
 
-    private static String insuranceCardToString(InsuranceCard insuranceCard) {
+    static String insuranceCardToString(InsuranceCard insuranceCard) {
         // Convert InsuranceCard object to a string representation
         // Format: cardNumber;cardHolderName;policyOwnerName;expirationDate
         if (insuranceCard != null) {
@@ -336,7 +335,7 @@ public class Customer{
         return null;
     }
 
-    private static String claimsToString(List<Claim> claims) {
+    static String claimsToString(List<Claim> claims) {
         // Convert List<Claim> to a string representation
         // Format: claim1,claim2,claim3...
         if (claims != null && !claims.isEmpty()) {

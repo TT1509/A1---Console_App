@@ -511,6 +511,199 @@ public class Claim implements ClaimProcessManager {
     }
 
 
+    public void addDocument() {
+        Scanner scanner = new Scanner(System.in);
+        try {
+            List<String> documentInfo = new ArrayList<>();
+
+            // Ask the user for the customer ID
+            System.out.println("Enter customer ID:");
+            String customerId = scanner.nextLine();
+
+            // Ask the user for the customer's role
+            System.out.println("Enter customer role (1. Policy Holder, 2. Dependent):");
+            int roleChoice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline character
+
+            String customerFile = null;
+
+            // Determine which file to use based on the customer's role
+            if (roleChoice == 1) {
+                customerFile = PolicyHolder.POLICYHOLDERS_FILE;
+            } else if (roleChoice == 2) {
+                customerFile = Dependent.DEPENDENTS_FILE;
+            } else {
+                System.out.println("Invalid role choice. Document cannot be added.");
+                return;
+            }
+
+            // Check if the customer file exists
+            File file = new File(customerFile);
+            if (!file.exists()) {
+                System.out.println("Customer file " + customerFile + " not found. Document cannot be added.");
+                return;
+            }
+
+            // Check if the customer ID exists in the file
+            try {
+                if (!customerIdExists(customerId, customerFile)) {
+                    System.out.println("Customer with ID " + customerId + " not found. Document cannot be added.");
+                    return;
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            // Continue with the document creation process
+            // Prompt the user to input claim ID
+            System.out.print("Enter claim ID: ");
+            String claimId = scanner.nextLine();
+
+            // Prompt the user to input card number
+            System.out.print("Enter card number: ");
+            String cardNum = scanner.nextLine();
+
+            // Prompt the user to input document name
+            System.out.print("Enter document name: ");
+            String documentName = scanner.nextLine();
+
+            // Add claim ID, card number, and document name to the list
+            documentInfo.add(claimId);
+            documentInfo.add(cardNum); // Assuming cardNumber is a String
+            documentInfo.add(documentName);
+
+            // Write the document information to the specific file
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(customerFile, true))) {
+                writer.write(String.join(",", documentInfo));
+                writer.newLine();
+                System.out.println("Document added successfully.");
+            } catch (IOException e) {
+                System.err.println("Error adding document: " + e.getMessage());
+            }
+        } finally {
+            scanner.close();
+        }
+    }
+
+
+    public void deleteDocument() {
+        Scanner scanner = new Scanner(System.in);
+        try {
+            // Ask the user for the customer ID
+            System.out.println("Enter customer ID:");
+            String customerId = scanner.nextLine();
+
+            // Ask the user for the customer's role
+            System.out.println("Enter customer role (1. Policy Holder, 2. Dependent):");
+            int roleChoice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline character
+
+            String customerFile = null;
+
+            // Determine which file to use based on the customer's role
+            if (roleChoice == 1) {
+                customerFile = PolicyHolder.POLICYHOLDERS_FILE;
+            } else if (roleChoice == 2) {
+                customerFile = Dependent.DEPENDENTS_FILE;
+            } else {
+                System.out.println("Invalid role choice. Document cannot be deleted.");
+                return;
+            }
+
+            // Check if the customer file exists
+            File file = new File(customerFile);
+            if (!file.exists()) {
+                System.out.println("Customer file " + customerFile + " not found. Document cannot be deleted.");
+                return;
+            }
+
+            // Check if the customer ID exists in the file
+            if (!customerIdExists(customerId, customerFile)) {
+                System.out.println("Customer with ID " + customerId + " not found. Document cannot be deleted.");
+                return;
+            }
+
+            // Load existing claims
+            List<Claim> claims = getAllClaims();
+
+            // Prompt the user to input the ID of the claim to delete document from
+            System.out.println("Enter the ID of the claim to delete document from:");
+            String claimIdToDelete = scanner.nextLine();
+
+            // Find the claim with the provided ID
+            Optional<Claim> claimToDelete = claims.stream()
+                    .filter(claim -> claim.getClaimID().equals(claimIdToDelete))
+                    .findFirst();
+
+            if (claimToDelete.isPresent()) {
+                // Display the claim details
+                System.out.println("Claim found:");
+                System.out.println(claimToDelete.get());
+
+                // Prompt the user to input the card number and document name to delete
+                System.out.print("Enter card number: ");
+                String cardNum = scanner.nextLine();
+                System.out.print("Enter document name: ");
+                String documentName = scanner.nextLine();
+
+                // Remove the specified document from the claim's document list
+                Claim claim = claimToDelete.get();
+                List<String> documents = claim.getDocuments();
+                String documentInfoToRemove = claimIdToDelete + "-" + cardNum + "-" + documentName;
+                documents.remove(documentInfoToRemove);
+
+                // Save the updated list of claims to the file
+                saveClaimsToFile(claims);
+                System.out.println("Document deleted successfully from the claim.");
+            } else {
+                System.out.println("Claim with ID " + claimIdToDelete + " not found.");
+            }
+        } catch (IOException e) {
+            System.err.println("Error deleting document: " + e.getMessage());
+        } finally {
+            scanner.close();
+        }
+    }
+
+    private boolean customerIdExists(String customerId, String customerFile) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new FileReader(customerFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(";");
+                if (parts[0].equals(customerId)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    static ArrayList<Claim> parseClaims(String claimData, List<Customer> customers) {
+        ArrayList<Claim> claims = new ArrayList<>();
+        if (!claimData.isEmpty()) {
+            String[] claimStrings = claimData.split(",");
+            for (String claimString : claimStrings) {
+                // Assuming the claim data format is consistent
+                String[] claimParts = claimString.split(";");
+
+                // Extracting claim information from claimParts and creating a new Claim object
+                String claimID = claimParts[0];
+                Date claimDate = Customer.parseDate(claimParts[1]); // Assuming parseDate function exists to parse date string
+                Customer insuredPerson = findCustomerById(claimParts[2], customers); // Assuming findCustomerById function exists
+                InsuranceCard cardNumber = InsuranceCard.stringToInsuranceCard(claimParts[3]); // Assuming stringToInsuranceCard function exists
+                Date examDate = Customer.parseDate(claimParts[4]); // Assuming parseDate function exists
+                List<String> documents = Arrays.asList(claimParts[5].split("-")); // Assuming documents are separated by "-"
+                double claimAmount = Double.parseDouble(claimParts[6]);
+                String status = claimParts[7];
+                List<String> receiverBankInfo = Arrays.asList(claimParts[8].split("-")); // Assuming receiver bank info are separated by "-"
+
+                // Creating a new Claim object and adding it to the claims list
+                Claim claim = new Claim(claimID, claimDate, insuredPerson, cardNumber, examDate, documents, claimAmount, status, receiverBankInfo);
+                claims.add(claim);
+            }
+        }
+        return claims;
+    }
 
     static void saveClaimsToFile(List<Claim> claims) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(CLAIM_FILE))) {

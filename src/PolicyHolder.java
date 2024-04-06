@@ -248,15 +248,24 @@ public class PolicyHolder extends Customer {
 
     public static List<PolicyHolder> getAllPolicyHolders() {
         List<PolicyHolder> policyHolders = new ArrayList<>();
-        List<Customer> customers = getAllCustomers(); // Assuming getAllCustomers() is a static method in the Customer class
+        String policyHolderFile = POLICYHOLDERS_FILE;
 
-        for (Customer customer : customers) {
-            if (customer instanceof PolicyHolder) {
-                policyHolders.add((PolicyHolder) customer);
+        try (BufferedReader reader = new BufferedReader(new FileReader(policyHolderFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                PolicyHolder policyHolder = PolicyHolder.stringToPolicyHolder(line);
+                if (policyHolder != null) {
+                    policyHolders.add(policyHolder);
+                }
             }
+        } catch (IOException e) {
+            System.err.println("Error reading policy holders: " + e.getMessage());
         }
+
         return policyHolders;
     }
+
+
 
     @Override
     public String toString() {
@@ -290,7 +299,7 @@ public class PolicyHolder extends Customer {
     }
 
     // Modify customerToString to make it compatible with PolicyHolder
-    static String customerToString(PolicyHolder policyHolder) {
+    static String policyHolderToString(PolicyHolder policyHolder) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(policyHolder.getId()).append(";");
         stringBuilder.append(policyHolder.getFullName()).append(";");
@@ -315,7 +324,7 @@ public class PolicyHolder extends Customer {
     static void savePolicyHoldersToFile(List<PolicyHolder> policyHolders) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(POLICYHOLDERS_FILE))) {
             for (PolicyHolder policyHolder : policyHolders) {
-                writer.write("PolicyHolder:" + customerToString(policyHolder));
+                writer.write("PolicyHolder:" + policyHolderToString(policyHolder));
                 writer.newLine();
             }
         }

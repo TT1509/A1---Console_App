@@ -350,6 +350,7 @@ public class Claim implements ClaimProcessManager {
     }
 
 
+
     @Override
     public void updateClaim() {
         Scanner scanner = new Scanner(System.in);
@@ -509,6 +510,116 @@ public class Claim implements ClaimProcessManager {
         }
         return claims;
     }
+
+    // In the Claim class
+    public void addDocument() {
+        Scanner scanner = new Scanner(System.in);
+        List<String> documentInfo = new ArrayList<>();
+
+        List<Claim> claims = getAllClaims();
+        System.out.println("Enter claim ID:");
+        String claimId = scanner.nextLine();
+
+        // Find the existing claim to update
+        Optional<Claim> existingClaim = claims.stream()
+                .filter(c -> c.getClaimID().equals(claimId))
+                .findFirst();
+
+
+        // Check if the entered claim ID is in the list of all claim IDs
+        if (!claims.contains(claimId)) {
+            System.out.println("Entered claim ID does not exist.");
+            return;
+        }
+
+        // Prompt the user to input card number
+        System.out.print("Enter card number: ");
+        String cardNum = scanner.nextLine();
+
+        // Prompt the user to input document name
+        System.out.print("Enter document name: ");
+        String documentName = scanner.nextLine();
+
+        // Add claim ID, card number, and document name to the list
+        documentInfo.add(claimId);
+        documentInfo.add(cardNum); // Assuming cardNumber is a String
+        documentInfo.add(documentName);
+
+        // Add document information to the claim
+        this.documents.add(documentInfo.toString());
+    }
+
+    public void deleteDocument() {
+        Scanner scanner = new Scanner(System.in);
+        try {
+            List<Claim> claims = getAllClaims(); // Load existing claims
+
+            // Prompt the user to input the ID of the claim to delete document from
+            System.out.println("Enter the ID of the claim to delete document from:");
+            String claimIdToDelete = scanner.nextLine();
+
+            // Find the claim with the provided ID
+            Optional<Claim> claimToDelete = claims.stream()
+                    .filter(claim -> claim.getClaimID().equals(claimIdToDelete))
+                    .findFirst();
+
+            if (claimToDelete.isPresent()) {
+                // Display the claim details
+                System.out.println("Claim found:");
+                System.out.println(claimToDelete.get());
+
+                // Prompt the user to input the card number and document name to delete
+                System.out.print("Enter card number: ");
+                String cardNum = scanner.nextLine();
+                System.out.print("Enter document name: ");
+                String documentName = scanner.nextLine();
+
+                // Remove the specified document from the claim's document list
+                Claim claim = claimToDelete.get();
+                List<String> documents = claim.getDocuments();
+                String documentInfoToRemove = claimIdToDelete + "-" + cardNum + "-" + documentName;
+                documents.remove(documentInfoToRemove);
+
+                // Save the updated list of claims to the file
+                saveClaimsToFile(claims);
+                System.out.println("Document deleted successfully from the claim.");
+            } else {
+                System.out.println("Claim with ID " + claimIdToDelete + " not found.");
+            }
+        } catch (IOException e) {
+            System.err.println("Error deleting document: " + e.getMessage());
+        } finally {
+            scanner.close();
+        }
+    }
+
+    static ArrayList<Claim> parseClaims(String claimData, List<Customer> customers) {
+        ArrayList<Claim> claims = new ArrayList<>();
+        if (!claimData.isEmpty()) {
+            String[] claimStrings = claimData.split(",");
+            for (String claimString : claimStrings) {
+                // Assuming the claim data format is consistent
+                String[] claimParts = claimString.split(";");
+
+                // Extracting claim information from claimParts and creating a new Claim object
+                String claimID = claimParts[0];
+                Date claimDate = Customer.parseDate(claimParts[1]); // Assuming parseDate function exists to parse date string
+                Customer insuredPerson = findCustomerById(claimParts[2], customers); // Assuming findCustomerById function exists
+                InsuranceCard cardNumber = InsuranceCard.stringToInsuranceCard(claimParts[3]); // Assuming stringToInsuranceCard function exists
+                Date examDate = Customer.parseDate(claimParts[4]); // Assuming parseDate function exists
+                List<String> documents = Arrays.asList(claimParts[5].split("-")); // Assuming documents are separated by "-"
+                double claimAmount = Double.parseDouble(claimParts[6]);
+                String status = claimParts[7];
+                List<String> receiverBankInfo = Arrays.asList(claimParts[8].split("-")); // Assuming receiver bank info are separated by "-"
+
+                // Creating a new Claim object and adding it to the claims list
+                Claim claim = new Claim(claimID, claimDate, insuredPerson, cardNumber, examDate, documents, claimAmount, status, receiverBankInfo);
+                claims.add(claim);
+            }
+        }
+        return claims;
+    }
+
 
 
 

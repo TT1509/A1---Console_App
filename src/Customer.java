@@ -71,7 +71,7 @@ public class Customer{
     static final String CUSTOMER_FILE = "resources/Customer.txt";
 
 
-    private static Set<String> generatedIds = new HashSet<>();
+    private static final Set<String> generatedIds = new HashSet<>();
 
     public static String generateCustomerId() {
         Random random = new Random();
@@ -86,151 +86,6 @@ public class Customer{
         generatedIds.add(customerId); // Add generated ID to set
         return customerId;
     }
-
-
-    static void addCustomer() {
-        Scanner scanner = new Scanner(System.in);
-        try {
-            List<Customer> customers = getAllCustomers(); // Load existing customers
-
-            String customerId = generateCustomerId();
-            System.out.println("Generated Customer ID: " + customerId);
-
-            System.out.println("Enter customer full name:");
-            String fullName = scanner.nextLine();
-
-            // Create a new InsuranceCard object for the customer using the addInsuranceCard function
-            InsuranceCard insuranceCard = InsuranceCard.addInsuranceCard(new Customer("", "", null, null));
-
-            // Create a new Customer object with the provided details
-            Customer newCustomer = new Customer(customerId, fullName, insuranceCard, new ArrayList<>());
-
-            // Add the new customer to the list of customers
-            customers.add(newCustomer);
-
-            // Write the new customer data to the file
-            saveCustomersToFile(customers);
-            System.out.println("Customer added successfully.");
-        } catch (IOException e) {
-            System.err.println("Error adding customer: " + e.getMessage());
-        } finally {
-            scanner.close();
-        }
-    }
-
-
-
-    static void deleteCustomer() {
-        Scanner scanner = new Scanner(System.in);
-        try {
-            List<Customer> customers = getAllCustomers();
-            System.out.println("Enter customer ID:");
-            String id = scanner.nextLine();
-
-            // Find the existing customer to delete
-            Optional<Customer> existingCustomer = customers.stream()
-                    .filter(c -> c.getId().equals(id))
-                    .findFirst();
-
-            if (existingCustomer.isPresent()) {
-                // Print customer details and confirm deletion
-                Customer customerToDelete = existingCustomer.get();
-                System.out.println("Customer found:");
-                System.out.println(customerToDelete);
-                System.out.println("Are you sure you want to delete this customer? (yes/no)");
-                String confirmation = scanner.nextLine();
-                if (confirmation.equalsIgnoreCase("yes")) {
-                    // Remove the customer from the list
-                    customers.remove(customerToDelete);
-                    saveCustomersToFile(customers);
-                    System.out.println("Customer deleted successfully.");
-                } else {
-                    System.out.println("Deletion canceled.");
-                }
-            } else {
-                System.out.println("Customer with ID " + id + " not found.");
-            }
-        } catch (IOException e) {
-            System.err.println("Error deleting customer: " + e.getMessage());
-        } finally {
-            scanner.close();
-        }
-    }
-
-
-    static void updateCustomer() {
-        Scanner scanner = new Scanner(System.in);
-        try {
-            List<Customer> customers = getAllCustomers();
-            System.out.println("Enter customer ID:");
-            String id = scanner.nextLine();
-
-            // Find the existing customer to update
-            Optional<Customer> existingCustomer = customers.stream()
-                    .filter(c -> c.getId().equals(id))
-                    .findFirst();
-
-            if (existingCustomer.isPresent()) {
-                // Print customer details and prompt for updates
-                Customer selectedCustomer = existingCustomer.get();
-                System.out.println("Customer found:");
-                System.out.println(selectedCustomer);
-                System.out.println("What do you want to update? Enter 'name' for full name or 'insurance' for insurance card (name or expiration date):");
-                String updateOption = scanner.nextLine();
-
-                switch (updateOption.toLowerCase()) {
-                    case "name":
-                        // Prompt for a new name
-                        System.out.println("Enter new full name:");
-                        String newName = scanner.nextLine();
-
-                        // Update the customer name
-                        selectedCustomer.setFullName(newName);
-                        break;
-                    case "insurance":
-                        // Copy existing insurance card details to a new one
-                        InsuranceCard existingInsuranceCard = selectedCustomer.getInsuranceCard();
-                        InsuranceCard updatedInsuranceCard = new InsuranceCard(existingInsuranceCard.getCardNumber(),
-                                existingInsuranceCard.getCardHolder(), existingInsuranceCard.getPolicyOwner(),
-                                existingInsuranceCard.getExpirationDate());
-                        // Prompt for any updates to insurance card
-                        System.out.println("Do you want to update the policy owner's name? (yes/no)");
-                        String updatePolicyOwner = scanner.nextLine();
-                        if (updatePolicyOwner.equalsIgnoreCase("yes")) {
-                            System.out.println("Enter new policy owner name:");
-                            String newPolicyOwner = scanner.nextLine();
-                            updatedInsuranceCard.setPolicyOwner(newPolicyOwner);
-                        }
-                        System.out.println("Do you want to update the expiration date? (yes/no)");
-                        String updateExpirationDate = scanner.nextLine();
-                        if (updateExpirationDate.equalsIgnoreCase("yes")) {
-                            System.out.println("Enter new expiration date (format: dd/MM/yyyy):");
-                            String expirationDateString = scanner.nextLine();
-                            Date expirationDate = parseDate(expirationDateString);
-                            updatedInsuranceCard.setExpirationDate(expirationDate);
-                        }
-                        // Set the updated insurance card to the customer
-                        selectedCustomer.setInsuranceCard(updatedInsuranceCard);
-                        break;
-                    default:
-                        System.out.println("Invalid update option.");
-                        return;
-                }
-
-                // Update the customer in the list and save to file
-                saveCustomersToFile(customers);
-                System.out.println("Customer updated successfully.");
-            } else {
-                System.out.println("Customer with ID " + id + " not found.");
-            }
-        } catch (IOException e) {
-            System.err.println("Error updating customer: " + e.getMessage());
-        } finally {
-            scanner.close();
-        }
-    }
-
-
 
 
     static Customer getCustomerById() {
@@ -282,7 +137,7 @@ public class Customer{
         stringBuilder.append(customer.getFullName()).append(";");
         if (customer.getInsuranceCard() != null) {
             // Append insurance card details, including ID
-            stringBuilder.append(insuranceCardToString(customer.getInsuranceCard())).append(";");
+            stringBuilder.append(insuranceCardToString(getInsuranceCard())).append(";");
         } else {
             // Append empty field if no insurance card
             stringBuilder.append(";");

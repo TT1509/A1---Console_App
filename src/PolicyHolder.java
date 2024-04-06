@@ -1,3 +1,4 @@
+
 import java.io.*;
 import java.util.*;
 
@@ -103,39 +104,41 @@ public class PolicyHolder extends Customer {
 
 
 
-    public void printPolicyHolder() {
-        System.out.println(toString());
+    public static PolicyHolder addPolicyHolder() throws IOException {
+        List<PolicyHolder> policyHolders = getAllPolicyHolders();
+
+        String id = generateCustomerId();
+        System.out.println("Policy Holder ID: " + id);
+        System.out.println("Enter policy holder full name: ");
+        String fullName = PolicyHolder.scanner.nextLine();
+        ArrayList<Claim> claims = new ArrayList<>();
+
+        // Create a new InsuranceCard object for the policy holder
+        InsuranceCard insuranceCard = InsuranceCard.addInsuranceCard();
+
+        // Create a new PolicyHolder object with the provided details
+        PolicyHolder newPolicyHolder = new PolicyHolder(id, fullName, insuranceCard, claims, new ArrayList<>());
+
+        // Add the new policy holder to the list of policy holders
+        policyHolders.add(newPolicyHolder);
+
+        // Write the new policy holder data to the file
+        savePolicyHoldersToFile(policyHolders);
+        System.out.println("Policy Holder added successfully.");
+
+        // Write the policy holder's data to the customer file
+        writePolicyHolderToFile(newPolicyHolder);
+
+        return newPolicyHolder;
     }
 
-    public static PolicyHolder addPolicyHolder() {
-        Scanner scanner = new Scanner(System.in);
-        try {
-            List<PolicyHolder> policyHolders = getAllPolicyHolders(); // Load existing policy holders
-
-            String policyHolderId = generateCustomerId();
-            System.out.println("Generated Policy Holder ID: " + policyHolderId);
-
-            System.out.println("Enter policy holder full name:");
-            String fullName = scanner.nextLine();
-
-            // Create a new InsuranceCard object for the policy holder
-            InsuranceCard insuranceCard = InsuranceCard.addInsuranceCard();
-
-            // Create a new PolicyHolder object with the provided details
-            PolicyHolder newPolicyHolder = new PolicyHolder(policyHolderId, fullName, insuranceCard, new ArrayList<>(), new ArrayList<>());
-
-            // Add the new policy holder to the list of policy holders
-            policyHolders.add(newPolicyHolder);
-
-            // Write the new policy holder data to the file
-            savePolicyHoldersToFile(policyHolders);
-            System.out.println("Policy holder added successfully.");
-
-            return newPolicyHolder;
+    private static void writePolicyHolderToFile(PolicyHolder policyHolder) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(CUSTOMER_FILE, true))) {
+            writer.write(Customer.customerToString(policyHolder)); // Assuming customerToString method exists for PolicyHolder
+            writer.newLine();
+            System.out.println("Policy Holder added to customer file successfully.");
         } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            scanner.close();
+            System.err.println("Error writing policy holder to customer file: " + e.getMessage());
         }
     }
 
@@ -219,7 +222,7 @@ public class PolicyHolder extends Customer {
     public static PolicyHolder getPolicyHolderById(String id) {
         BufferedReader reader = null;
         try {
-            reader = new BufferedReader(new FileReader(CUSTOMER_FILE));
+            reader = new BufferedReader(new FileReader(POLICYHOLDERS_FILE));
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(";");
@@ -248,15 +251,24 @@ public class PolicyHolder extends Customer {
 
     public static List<PolicyHolder> getAllPolicyHolders() {
         List<PolicyHolder> policyHolders = new ArrayList<>();
-        List<Customer> customers = getAllCustomers(); // Assuming getAllCustomers() is a static method in the Customer class
+        String policyHolderFile = POLICYHOLDERS_FILE;
 
-        for (Customer customer : customers) {
-            if (customer instanceof PolicyHolder) {
-                policyHolders.add((PolicyHolder) customer);
+        try (BufferedReader reader = new BufferedReader(new FileReader(policyHolderFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                PolicyHolder policyHolder = PolicyHolder.stringToPolicyHolder(line);
+                if (policyHolder != null) {
+                    policyHolders.add(policyHolder);
+                }
             }
+        } catch (IOException e) {
+            System.err.println("Error reading policy holders: " + e.getMessage());
         }
+
         return policyHolders;
     }
+
+
 
     @Override
     public String toString() {
@@ -290,7 +302,7 @@ public class PolicyHolder extends Customer {
     }
 
     // Modify customerToString to make it compatible with PolicyHolder
-    static String customerToString(PolicyHolder policyHolder) {
+    static String policyHolderToString(PolicyHolder policyHolder) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(policyHolder.getId()).append(";");
         stringBuilder.append(policyHolder.getFullName()).append(";");
@@ -315,7 +327,7 @@ public class PolicyHolder extends Customer {
     static void savePolicyHoldersToFile(List<PolicyHolder> policyHolders) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(POLICYHOLDERS_FILE))) {
             for (PolicyHolder policyHolder : policyHolders) {
-                writer.write("PolicyHolder:" + customerToString(policyHolder));
+                writer.write("PolicyHolder:" + policyHolderToString(policyHolder));
                 writer.newLine();
             }
         }

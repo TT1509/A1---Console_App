@@ -1,10 +1,9 @@
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Scanner;
 public class SystemManager {
-
-
     public void addDependentToPolicyHolder(Scanner scanner) {
         // Read dependent ID from user input
         System.out.print("Enter dependent ID: ");

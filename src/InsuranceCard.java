@@ -1,4 +1,5 @@
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class InsuranceCard {
@@ -92,27 +93,43 @@ public class InsuranceCard {
 
     static final String INSURANCE_FILE = "resources/insuranceCard.txt";
 
-
     public static InsuranceCard addInsuranceCard() {
         Scanner scanner = new Scanner(System.in);
-        try {
-            // Prompt the user to input the insurance card details
-            String cardNumber = generateCardNumber();
-            System.out.println("Generated insurance card number: " + cardNumber);
-            System.out.println("Enter policy owner:");
+        InsuranceCard insuranceCard = null; // Initialize insurance card
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(INSURANCE_FILE, true))) {
+
+            // Generate insurance card number with 10 digits
+            String cardNumber;
+            boolean validCardNumber;
+            do {
+                cardNumber = generateCardNumber();
+                validCardNumber = true; // Assuming generated card number is valid
+                // You can add additional validation logic here if required
+            } while (!validCardNumber);
+
+            // Prompt the admin to input policy holder's name
+            System.out.println("Enter policy owner name:");
             String policyOwner = scanner.nextLine();
+
+            // Prompt the admin to input expiration date
             System.out.println("Enter expiration date (format: dd/MM/yyyy):");
             String expirationDateString = scanner.nextLine();
             Date expirationDate = Customer.parseDate(expirationDateString);
 
-            // Create a new InsuranceCard object
-            InsuranceCard insuranceCard = new InsuranceCard(cardNumber, null, policyOwner, expirationDate);
+            // Create the InsuranceCard object using the input
+            insuranceCard = new InsuranceCard(cardNumber, null, policyOwner, expirationDate);
 
+            // Write the insurance card data to the file
+            writer.write(insuranceCardToString(insuranceCard));
+            writer.newLine();
             System.out.println("Insurance card added successfully.");
-            return insuranceCard; // Return the created insurance card
+
+        } catch (IOException e) {
+            System.err.println("Error adding insurance card: " + e.getMessage());
         } finally {
             scanner.close();
         }
+        return insuranceCard;
     }
 
     private static String generateCardNumber() {

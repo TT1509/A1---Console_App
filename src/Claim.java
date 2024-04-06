@@ -145,35 +145,34 @@ public class Claim implements ClaimProcessManager {
         return claimID.matches("^f-\\d{10}$");
     }
 
+    private static final Set<String> generatedClaimIds = new HashSet<>();
+
+    public static String generateClaimId() {
+        Random random = new Random();
+        String claimId;
+        do {
+            StringBuilder sb = new StringBuilder("f-");
+            for (int i = 0; i < 10; i++) {
+                sb.append(random.nextInt(10)); // Generate a random digit from 0 to 9
+            }
+            claimId = sb.toString();
+        } while (generatedClaimIds.contains(claimId)); // Check uniqueness
+        generatedClaimIds.add(claimId); // Add generated ID to set
+        return claimId;
+    }
+
     @Override
     public void addClaim() {
         Scanner scanner = new Scanner(System.in);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(CLAIM_FILE, true));
              BufferedWriter customerWriter = new BufferedWriter(new FileWriter(Customer.CUSTOMER_FILE, true))) {
-            List<Claim> claims = getAllClaims(); // Load existing claims
 
             String claimID;
-            Claim claim = new Claim(); // Declare the claim variable here
+            Claim claim = new Claim();
 
-
-            // Prompt the user to input claim ID until a valid one is entered
-            do {
-                // Prompt the user to input claim ID
-                System.out.println("Enter claim ID (format: f-10 numbers):");
-                claimID = scanner.nextLine();
-                if (!isValidClaimId(claimID)) {
-                    System.out.println("Invalid ID format. Please enter a valid ID.");
-                    addClaim();
-                } else {
-                    String finalClaimID = claimID;
-                    if (claims.stream().anyMatch(c -> getClaimID().equals(finalClaimID))) {
-                        System.out.println("Claim with ID " + claimID + " already exists. Please choose a different ID.");
-                        claimID = null; // Reset claimID to prompt the user again
-                    }
-                }
-                // Check if the entered ID already exists
-
-            } while (claimID == null);
+            // Generate claim id
+            claimID = generateClaimId();
+            System.out.println("Generated Claim Id: " + claimID);
 
 
             // Automatically set claim date to the current date
@@ -251,7 +250,7 @@ public class Claim implements ClaimProcessManager {
             // Prompt the user to input documents list
             System.out.println("Enter documents information:");
             // Scanner for claim id
-            System.out.print("Enter claim ID: ");
+            System.out.print("Enter claim ID (Please enter the generated claim id): ");
             String enteredClaimId = scanner.nextLine();
             // Check if the entered claim ID matches the one entered earlier
             if (!enteredClaimId.equals(claimID)) {
@@ -348,7 +347,6 @@ public class Claim implements ClaimProcessManager {
             scanner.close();
         }
     }
-
 
 
     @Override
@@ -511,48 +509,121 @@ public class Claim implements ClaimProcessManager {
         return claims;
     }
 
-    // In the Claim class
+
     public void addDocument() {
         Scanner scanner = new Scanner(System.in);
-        List<String> documentInfo = new ArrayList<>();
+        try {
+            List<String> documentInfo = new ArrayList<>();
 
-        List<Claim> claims = getAllClaims();
-        System.out.println("Enter claim ID:");
-        String claimId = scanner.nextLine();
+            // Ask the user for the customer ID
+            System.out.println("Enter customer ID:");
+            String customerId = scanner.nextLine();
 
-        // Find the existing claim to update
-        Optional<Claim> existingClaim = claims.stream()
-                .filter(c -> c.getClaimID().equals(claimId))
-                .findFirst();
+            // Ask the user for the customer's role
+            System.out.println("Enter customer role (1. Policy Holder, 2. Dependent):");
+            int roleChoice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline character
 
+            String customerFile = null;
 
-        // Check if the entered claim ID is in the list of all claim IDs
-        if (!claims.contains(claimId)) {
-            System.out.println("Entered claim ID does not exist.");
-            return;
+            // Determine which file to use based on the customer's role
+            if (roleChoice == 1) {
+                customerFile = PolicyHolder.POLICYHOLDERS_FILE;
+            } else if (roleChoice == 2) {
+                customerFile = Dependent.DEPENDENTS_FILE;
+            } else {
+                System.out.println("Invalid role choice. Document cannot be added.");
+                return;
+            }
+
+            // Check if the customer file exists
+            File file = new File(customerFile);
+            if (!file.exists()) {
+                System.out.println("Customer file " + customerFile + " not found. Document cannot be added.");
+                return;
+            }
+
+            // Check if the customer ID exists in the file
+            try {
+                if (!customerIdExists(customerId, customerFile)) {
+                    System.out.println("Customer with ID " + customerId + " not found. Document cannot be added.");
+                    return;
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            // Continue with the document creation process
+            // Prompt the user to input claim ID
+            System.out.print("Enter claim ID: ");
+            String claimId = scanner.nextLine();
+
+            // Prompt the user to input card number
+            System.out.print("Enter card number: ");
+            String cardNum = scanner.nextLine();
+
+            // Prompt the user to input document name
+            System.out.print("Enter document name: ");
+            String documentName = scanner.nextLine();
+
+            // Add claim ID, card number, and document name to the list
+            documentInfo.add(claimId);
+            documentInfo.add(cardNum); // Assuming cardNumber is a String
+            documentInfo.add(documentName);
+
+            // Write the document information to the specific file
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(customerFile, true))) {
+                writer.write(String.join(",", documentInfo));
+                writer.newLine();
+                System.out.println("Document added successfully.");
+            } catch (IOException e) {
+                System.err.println("Error adding document: " + e.getMessage());
+            }
+        } finally {
+            scanner.close();
         }
-
-        // Prompt the user to input card number
-        System.out.print("Enter card number: ");
-        String cardNum = scanner.nextLine();
-
-        // Prompt the user to input document name
-        System.out.print("Enter document name: ");
-        String documentName = scanner.nextLine();
-
-        // Add claim ID, card number, and document name to the list
-        documentInfo.add(claimId);
-        documentInfo.add(cardNum); // Assuming cardNumber is a String
-        documentInfo.add(documentName);
-
-        // Add document information to the claim
-        this.documents.add(documentInfo.toString());
     }
+
 
     public void deleteDocument() {
         Scanner scanner = new Scanner(System.in);
         try {
-            List<Claim> claims = getAllClaims(); // Load existing claims
+            // Ask the user for the customer ID
+            System.out.println("Enter customer ID:");
+            String customerId = scanner.nextLine();
+
+            // Ask the user for the customer's role
+            System.out.println("Enter customer role (1. Policy Holder, 2. Dependent):");
+            int roleChoice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline character
+
+            String customerFile = null;
+
+            // Determine which file to use based on the customer's role
+            if (roleChoice == 1) {
+                customerFile = PolicyHolder.POLICYHOLDERS_FILE;
+            } else if (roleChoice == 2) {
+                customerFile = Dependent.DEPENDENTS_FILE;
+            } else {
+                System.out.println("Invalid role choice. Document cannot be deleted.");
+                return;
+            }
+
+            // Check if the customer file exists
+            File file = new File(customerFile);
+            if (!file.exists()) {
+                System.out.println("Customer file " + customerFile + " not found. Document cannot be deleted.");
+                return;
+            }
+
+            // Check if the customer ID exists in the file
+            if (!customerIdExists(customerId, customerFile)) {
+                System.out.println("Customer with ID " + customerId + " not found. Document cannot be deleted.");
+                return;
+            }
+
+            // Load existing claims
+            List<Claim> claims = getAllClaims();
 
             // Prompt the user to input the ID of the claim to delete document from
             System.out.println("Enter the ID of the claim to delete document from:");
@@ -593,6 +664,19 @@ public class Claim implements ClaimProcessManager {
         }
     }
 
+    private boolean customerIdExists(String customerId, String customerFile) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new FileReader(customerFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(";");
+                if (parts[0].equals(customerId)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     static ArrayList<Claim> parseClaims(String claimData, List<Customer> customers) {
         ArrayList<Claim> claims = new ArrayList<>();
         if (!claimData.isEmpty()) {
@@ -619,9 +703,6 @@ public class Claim implements ClaimProcessManager {
         }
         return claims;
     }
-
-
-
 
     static void saveClaimsToFile(List<Claim> claims) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(CLAIM_FILE))) {

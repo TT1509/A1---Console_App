@@ -21,7 +21,7 @@ public class Main {
 //        dependent.getPolicyHolder();
 //        PolicyHolder.addDependentToPolicyHolder();
 
-        SystemManager systemManager = new SystemManager();
+
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;
 
@@ -75,7 +75,7 @@ public class Main {
         return containsNumber;
     }
 
-    private static void handleClaimMenu(Scanner scanner) {
+    private static void handleClaimMenu(Scanner scanner) throws IOException {
         Claim claim = new Claim();
         System.out.println("Claim menu:");
         System.out.println("1. Add claim");
@@ -92,6 +92,8 @@ public class Main {
             int choice = Integer.parseInt(input);
             switch (choice) {
                 case 1:
+                    System.out.println(PolicyHolder.getAllPolicyHolders());
+                    System.out.println(Dependent.getAllDependents());
                     claim.addClaim();
                     break;
                 case 2:
@@ -150,7 +152,7 @@ public class Main {
         }
     }
 
-    private static void handlePolicyHolderMenu(Scanner scanner) {
+    private static void handlePolicyHolderMenu(Scanner scanner) throws IOException {
         System.out.println("Policy holders menu:");
         System.out.println("1. Add policy holders");
         System.out.println("2. Delete policy holders");

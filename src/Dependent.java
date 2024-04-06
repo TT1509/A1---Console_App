@@ -55,7 +55,7 @@ public class Dependent extends Customer {
         List<Dependent> dependents = getAllDependents();
 
         String id = generateCustomerId();
-        System.out.println("Dependent ID " + id);
+        System.out.println("Dependent ID: " + id);
         System.out.println("Enter dependent full name: ");
         String fullName = PolicyHolder.scanner.nextLine();
         ArrayList<Claim> claims = new ArrayList<>();
@@ -72,8 +72,23 @@ public class Dependent extends Customer {
         // Write the new dependent data to the file
         saveDependentsToFile(dependents);
         System.out.println("Dependent added successfully.");
+
+        // Write the dependent's data to the customer file
+        writeCustomerToFile(newDependent);
+
         return newDependent;
     }
+
+    private static void writeCustomerToFile(Customer customer) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(CUSTOMER_FILE, true))) {
+            writer.write(Customer.customerToString(customer)); // Assuming customerToString method exists
+            writer.newLine();
+            System.out.println("Policy holder added to customer file successfully.");
+        } catch (IOException e) {
+            System.err.println("Error writing policy holder to customer file: " + e.getMessage());
+        }
+    }
+
 
 
     static List<Dependent> getAllDependents() throws IOException {
@@ -160,7 +175,26 @@ public class Dependent extends Customer {
         return sb.toString();
     }
 
-    // Method to serialize dependents into a string representation
+    // Serialize a Dependent object to a string
+    static String dependentToString(Dependent dependent) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(dependent.getId()).append(";");
+        stringBuilder.append(dependent.getFullName()).append(";");
+        if (dependent.getInsuranceCard() != null) {
+            // Append insurance card details, including ID
+            stringBuilder.append(insuranceCardToString(dependent.getInsuranceCard())).append(";");
+        } else {
+            // Append empty field if no insurance card
+            stringBuilder.append(";");
+        }
+        if (dependent.getClaims() != null && !dependent.getClaims().isEmpty()) {
+            stringBuilder.append(claimsToString(dependent.getClaims()));
+        }
+        stringBuilder.append(dependent.getPolicyHolder()).append(";"); // Append policy holder ID
+        return stringBuilder.toString();
+    }
+
+    // Serialize a list of dependents into a string representation
     static String dependentsToString(ArrayList<String> dependents) {
         StringBuilder stringBuilder = new StringBuilder();
         for (String dependent : dependents) {

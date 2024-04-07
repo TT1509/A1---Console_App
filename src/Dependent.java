@@ -23,13 +23,6 @@ public class Dependent extends Customer {
         this.policyHolder = policyHolder;
     }
 
-    public void printDependent() {
-        System.out.println(toString());
-    }
-
-    public void addPolicyHolderToDependent(String policyHolderId) {
-        this.policyHolder = policyHolderId;
-    }
 
 
     public static PolicyHolder getPolicyHolder(String dependentId) throws IOException {
@@ -175,24 +168,6 @@ public class Dependent extends Customer {
         return sb.toString();
     }
 
-    // Serialize a Dependent object to a string
-    static String dependentToString(Dependent dependent) {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(dependent.getId()).append(";");
-        stringBuilder.append(dependent.getFullName()).append(";");
-        if (dependent.getInsuranceCard() != null) {
-            // Append insurance card details, including ID
-            stringBuilder.append(insuranceCardToString(dependent.getInsuranceCard())).append(";");
-        } else {
-            // Append empty field if no insurance card
-            stringBuilder.append(";");
-        }
-        if (dependent.getClaims() != null && !dependent.getClaims().isEmpty()) {
-            stringBuilder.append(claimsToString(dependent.getClaims()));
-        }
-        stringBuilder.append(dependent.getPolicyHolder()).append(";"); // Append policy holder ID
-        return stringBuilder.toString();
-    }
 
     // Serialize a list of dependents into a string representation
     static String dependentsToString(ArrayList<String> dependents) {

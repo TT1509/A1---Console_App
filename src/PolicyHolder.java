@@ -16,69 +16,6 @@ public class PolicyHolder extends Customer {
         this.dependents = dependents != null ? dependents : new ArrayList<>(); // Initialize dependents with provided value or as an empty ArrayList
     }
 
-    public static void deleteDependentFromPolicyHolder() {
-        Scanner scanner = new Scanner(System.in);
-        try {
-            List<PolicyHolder> policyHolders = getAllPolicyHolders(); // Load existing policy holders
-
-            // Display a list of policy holders to the user
-            System.out.println("Policy Holders:");
-            for (PolicyHolder policyHolder : policyHolders) {
-                System.out.println(policyHolder);
-            }
-
-            // Prompt the user to input the ID of the policy holder
-            System.out.println("Enter the ID of the policy holder from whom you want to delete a dependent:");
-            String policyHolderId = scanner.nextLine();
-
-            // Find the selected policy holder
-            PolicyHolder selectedPolicyHolder = null;
-            for (PolicyHolder policyHolder : policyHolders) {
-                if (policyHolder.getId().equals(policyHolderId)) {
-                    selectedPolicyHolder = policyHolder;
-                    break;
-                }
-            }
-
-            if (selectedPolicyHolder == null) {
-                System.out.println("Policy holder not found.");
-                return;
-            }
-
-            // Display the dependents associated with the selected policy holder
-            System.out.println("Dependents:");
-            for (String dependent : selectedPolicyHolder.getDependents()) {
-                System.out.println(dependent);
-            }
-
-            // Prompt the user to input the ID of the dependent to delete
-            System.out.println("Enter the ID of the dependent you want to delete:");
-            String dependentId = scanner.nextLine();
-
-            // Find and remove the dependent from the selected policy holder's list of dependents
-            boolean removed = selectedPolicyHolder.removeDependent(dependentId);
-
-            if (removed) {
-                // Save the updated list of policy holders to the file
-                savePolicyHoldersToFile(policyHolders);
-                System.out.println("Dependent deleted successfully.");
-            } else {
-                System.out.println("Dependent not found in the policy holder's list.");
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            scanner.close();
-        }
-    }
-
-    // Your existing methods...
-
-    public static void main(String[] args) {
-        // Your main method
-    }
-
-
     public ArrayList<String> getDependents() {
         return dependents;
     }
@@ -269,6 +206,61 @@ public class PolicyHolder extends Customer {
     }
 
 
+    public static void deleteDependentFromPolicyHolder() {
+        Scanner scanner = new Scanner(System.in);
+        try {
+            List<PolicyHolder> policyHolders = getAllPolicyHolders(); // Load existing policy holders
+
+            // Display a list of policy holders to the user
+            System.out.println("Policy Holders:");
+            for (PolicyHolder policyHolder : policyHolders) {
+                System.out.println(policyHolder);
+            }
+
+            // Prompt the user to input the ID of the policy holder
+            System.out.println("Enter the ID of the policy holder from whom you want to delete a dependent:");
+            String policyHolderId = scanner.nextLine();
+
+            // Find the selected policy holder
+            PolicyHolder selectedPolicyHolder = null;
+            for (PolicyHolder policyHolder : policyHolders) {
+                if (policyHolder.getId().equals(policyHolderId)) {
+                    selectedPolicyHolder = policyHolder;
+                    break;
+                }
+            }
+
+            if (selectedPolicyHolder == null) {
+                System.out.println("Policy holder not found.");
+                return;
+            }
+
+            // Display the dependents associated with the selected policy holder
+            System.out.println("Dependents:");
+            for (String dependent : selectedPolicyHolder.getDependents()) {
+                System.out.println(dependent);
+            }
+
+            // Prompt the user to input the ID of the dependent to delete
+            System.out.println("Enter the ID of the dependent you want to delete:");
+            String dependentId = scanner.nextLine();
+
+            // Find and remove the dependent from the selected policy holder's list of dependents
+            boolean removed = selectedPolicyHolder.removeDependent(dependentId);
+
+            if (removed) {
+                // Save the updated list of policy holders to the file
+                savePolicyHoldersToFile(policyHolders);
+                System.out.println("Dependent deleted successfully.");
+            } else {
+                System.out.println("Dependent not found in the policy holder's list.");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            scanner.close();
+        }
+    }
 
     @Override
     public String toString() {

@@ -47,9 +47,6 @@ public class Claim implements ClaimProcessManager {
         return claimID;
     }
 
-    public void setClaimID(String claimID) {
-        this.claimID = claimID;
-    }
 
     public Date getClaimDate() {
         return claimDate;
@@ -79,9 +76,6 @@ public class Claim implements ClaimProcessManager {
         return examDate;
     }
 
-    public void setExamDate(Date examDate) {
-        this.examDate = examDate;
-    }
 
     public List<String> getDocuments() {
         return documents;
@@ -140,10 +134,6 @@ public class Claim implements ClaimProcessManager {
         return foundCustomer.orElse(null);
     }
 
-    static boolean isValidClaimId(String claimID) {
-        // Check if the ID starts with "c-" and has 7 digits after that
-        return claimID.matches("^f-\\d{10}$");
-    }
 
     private static final Set<String> generatedClaimIds = new HashSet<>();
 

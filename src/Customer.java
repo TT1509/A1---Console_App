@@ -273,13 +273,5 @@ public class Customer{
             return null;
         }
     }
-
-    static void saveCustomersToFile(List<Customer> customers) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(CUSTOMER_FILE))) {
-            for (Customer customer : customers) {
-                writer.write(customerToString(customer));
-                writer.newLine();
-            }
-        }
-    }
+    
 }
